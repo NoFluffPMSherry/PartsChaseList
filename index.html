@@ -36,7 +36,7 @@
 .pcx-date{margin-top:18px;padding:6px 12px;background:#333;color:#fff;font-family:var(--figure);font-weight:700;font-size:11px;}
 .pcx-link{font-family:var(--figure);font-weight:700;color:var(--green-deep);text-decoration:none;}
 .pcx-link:hover{text-decoration:underline;}
-.pcx-colhead{margin-top:14px;}
+.pcx-colhead{margin-top:14px;position:sticky;top:0;z-index:20;background:var(--paper);}
 .pcx-colhead .cgrid-wrap{border-top:1px solid var(--line);}
 .pcx-datehd{margin-top:20px;font-family:var(--figure);font-size:15px;font-weight:400;color:#2b2b2b;border-bottom:2px solid #333;padding-bottom:3px;}
 .pcx-jobhd{margin-top:10px;font-family:var(--figure);font-size:13px;font-weight:700;}
@@ -94,11 +94,6 @@
       <div class="grow"></div>
       <button class="btn" id="btnCsv">Export CSV</button>
       <button class="btn" id="btnPrint">Print list</button>
-    </div>
-
-    <div class="alert warn" style="margin-top:12px;" id="hygiene">
-      <div><span class="at">1 of 3 sites is not receipting consistently</span>
-      Wollongong shows 2 receipted of 19 lines in this range. Its list may read as "nothing has arrived" when parts are on site. <a href="#" style="color:var(--green-deep);font-weight:700;text-decoration:underline;" onclick="return false;">View site</a></div>
     </div>
 
     <div class="pcx-wrap" id="results"></div>
