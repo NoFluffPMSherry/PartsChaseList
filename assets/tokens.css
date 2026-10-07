@@ -1,0 +1,77 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PARTSCHECK DESIGN SYSTEM — canonical FOUNDATIONS (design tokens).
+   Single source of truth for colour, type, and layout. Documented in
+   design-system.html (live reference) and DESIGN-SYSTEM.md (guide).
+   Consume by linking this file; use the CSS custom properties below —
+   never hard-code the hex values. Do not edit values here without
+   updating the reference.
+   ═══════════════════════════════════════════════════════════════════ */
+/* Design tokens for the CURRENT PartsCheck look & feel reskin.
+   Same custom-property NAMES as supplier-shell/assets/tokens.css (Evolved
+   skin) — every value below is remapped to match production commonCSS.php
+   instead of the brass/pine "Evolved" palette. components.css (also copied
+   from supplier-shell and re-authored here) consumes these vars unmodified,
+   so the shared JS/views (which never touch colours directly) render in the
+   current skin with zero markup changes.
+
+   Source of truth for values: production commonCSS.php —
+   green #0FA83E, hover #0b9a41, greys #636363 / #9a9a9a, lime accent
+   #84bf3f, scrollbar #13a538, card box #eeeeee, body text #333,
+   hairline #cccccc, page #f4f4f4, surfaces white. Body copy is
+   11px Verdana; headings/buttons are Arial (buttons uppercase).
+
+   No brass, no gold, no cream paper, no serif ledger numerals — the
+   "--brass-*"/"--figure" token NAMES are kept only because components.css
+   references them structurally (decorative rules, ledger numeral font);
+   their VALUES here are grey/green/Arial equivalents, never gold. */
+:root{
+  /* ---- surfaces / page ---- */
+  --paper:#F4F4F4; --card:#FFFFFF; --card-2:#FAFAFA;
+
+  /* ---- text ---- */
+  --ink:#333333; --ink-soft:#444444; --muted:#636363; --faint:#636363;
+
+  /* ---- hairlines / structure ---- */
+  --line:#CCCCCC; --line-strong:#BBBBBB; --gauge:#EEEEEE;
+
+  /* ---- brand green ---- */
+  --green:#0FA83E; --green-deep:#0B9A41; --green-rail:#0B9A41; --green-wash:rgba(15,168,62,.10);
+
+  /* ---- semantic status ---- */
+  --good:#0B9A41; --bad:#A5341F; --bad-wash:rgba(165,52,31,.10);
+  --warn:#A4531F; --warn-wash:rgba(164,83,31,.12);
+
+  /* ---- "brass" token family, remapped to the grey admin-chrome kit ----
+     (grey box header / grey rule family, standing in for the Evolved
+     skin's brass sheen and gold-face roundel — current PartsCheck has
+     no metallic accent, so these resolve to greys/lime instead). */
+  --brass:#9A9A9A; --brass-lt:#EEEEEE; --brass-hi:#F4F4F4; --brass-deep:#636363;
+  --brass-sheen:linear-gradient(90deg,#CCCCCC,#84BF3F 28%,#CCCCCC 60%,#CCCCCC);
+  --brass-ring:conic-gradient(from 218deg,#0b9a41,#0fa83e,#84bf3f,#0fa83e,#0b9a41,#84bf3f,#0b9a41);
+
+  /* ---- chart tones ---- */
+  --tone-pc:#0FA83E; --tone-kb:#636363; --tone-admin:#9A9A9A; --tone-muted:#CCCCCC; --tone-alt:#84BF3F;
+
+  /* ---- lime accent (current PartsCheck's box-header underline accent) ---- */
+  --lime:#84BF3F; --scrollbar:#13A538;
+
+  /* ---- supplier-response signal colours ----
+     Production's own values, verified against appV2
+     quotes-controller.php::getSupplierIconImage(): a supplier that has
+     priced renders a green tick (#13a538 "Received"), one that has not
+     renders an amber cross (#f7941d). Same green as the part-number-match
+     chip — one green means "this came good". */
+  --signal-ok:#13A538; --signal-no:#F7941D;
+
+  /* ---- type ---- */
+  --sans:Verdana,Geneva,sans-serif;
+  --figure:Arial,Helvetica,sans-serif;
+  --rail:172px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:11px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+.num{font-variant-numeric:tabular-nums lining-nums;}
+.fig{font-family:var(--figure);font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}

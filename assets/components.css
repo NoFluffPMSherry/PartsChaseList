@@ -1,0 +1,2229 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PARTSCHECK DESIGN SYSTEM — canonical COMPONENTS.
+   The component layer built on tokens.css. Documented in
+   design-system.html (live reference) and DESIGN-SYSTEM.md (guide).
+   Use the documented class names; consume tokens via the CSS variables.
+   ═══════════════════════════════════════════════════════════════════ */
+/* Component CSS for the CURRENT PartsCheck look & feel reskin.
+   Same selectors/class names as supplier-shell/assets/components.css
+   (Evolved skin) — this file re-authors every rule in today's production
+   vocabulary (commonCSS.php): boxy 1px #ccc panels with tight 3-6px radii,
+   grey box headers, a lime (#84bf3f) bottom-border accent, Arial uppercase
+   buttons, DataTables-style tables (grey header, alternating rows). No warm
+   cream paper, no brass/gold, no serif ledger numerals, no tick logo — the
+   shared JS/views (assets/ui.js, assets/shell.js, views/*.js) are untouched;
+   only this stylesheet + tokens.css differ from the Evolved build. */
+
+/* ---- Shell frame ---- */
+.shell{display:grid;grid-template-columns:var(--rail) 1fr;min-height:100vh;}
+.main{min-width:0;display:flex;flex-direction:column;}
+
+/* ---- Level 1: product strip — classic grey tab row pinned above the
+   rail, shown whenever SHELL.product !== 'hub'. Active tab = white
+   with a green top rule + green text (today's tab grammar).
+   THE CONTEXT ITEMS NOW RIDE IN THIS SAME ROW (29 Jul): account scope,
+   period, loyalty, role switch and search used to sit in a second
+   `.topbar` band underneath, which cost ~44px of vertical space above
+   every screen for chrome the reader looks at once. One bar instead of
+   two. ---- */
+/* Fixed height, not min-height: the one-app-bar rework relaxed this to
+   min-height so the strip could grow around the context chips and user menu
+   it carried. That rework was dropped when the two branches were integrated,
+   so the strip holds tabs only again — and min-height let it settle at
+   40.67px, rounding to 41 and busting the 140px desktop chrome budget by 1px
+   (see chromeBudget in selfcheck.js). */
+.pstrip{display:flex;align-items:center;gap:0;height:40px;padding:0 10px 0 0;
+  background:#DCDCDC;border-bottom:1px solid #BBBBBB;
+  position:sticky;top:0;z-index:10;overflow-x:auto;}
+/* Right-hand context group. `flex:none` so the product tabs keep the
+   flexible space and these never squash; they wrap to a second line only
+   on genuinely narrow viewports (see the breakpoints below). */
+.pstrip-ctx{display:flex;align-items:center;gap:10px;flex:none;margin-left:12px;padding-left:12px;
+  border-left:1px solid #C4C4C4;height:26px;}
+.pstrip-ctx .search{margin-left:0;background:#fff;}
+.pstrip-ctx .monthbadge,.pstrip-ctx .loyalty{background:#fff;}
+.rail-hamburger{display:none;}
+.rail-backdrop{display:none;}
+/* Evolved-only (assets/shell.js productStripHtml() gates this on
+   window.SKIN !== 'current'): the current skin's route back to the hub is
+   the brand wordmark in pcBrandBar() (assets/ui.js) instead, which has no
+   Evolved-skin equivalent, so the strip carries its own home control there.
+   Plain "Home" label, no glyph — the deleted button read "◧ Home", and "◧"
+   is PartsCheck's own emblem (PRODUCTS[0].emblem in shell.js), which sat
+   confusingly beside the "PartsCheck" tab right beside it. */
+.pstrip-home{flex:none;font:inherit;font-family:var(--figure);font-size:11.5px;font-weight:700;border:0;
+  background:transparent;color:#2F6E1B;border-radius:0;padding:0 14px;cursor:pointer;height:100%;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;line-height:1;
+  transition:background .12s ease,color .12s ease;}
+.pstrip-home:hover{background:rgba(255,255,255,.4);color:#1F4E10;}
+.pstrip-tabs{display:flex;align-items:flex-end;gap:0;overflow-x:auto;flex:1;min-width:0;height:100%;}
+.pstrip-tab{flex:none;font:inherit;font-family:var(--figure);font-size:11.5px;font-weight:400;border:1px solid transparent;border-bottom:0;
+  background:transparent;color:#555555;border-radius:3px 3px 0 0;padding:9px 15px;cursor:pointer;
+  margin-top:4px;transition:background .12s ease,color .12s ease;white-space:nowrap;}
+.pstrip-tab:hover{background:rgba(255,255,255,.35);color:#222222;}
+.pstrip-tab.active{background:var(--card);color:var(--green);font-weight:700;border-color:#BBBBBB;
+  border-top:3px solid var(--green);border-radius:3px 3px 0 0;padding-top:7px;margin-top:0;}
+.pstrip-tab.active:hover{background:var(--card);}
+.pstrip-home:focus-visible,.pstrip-tab:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+
+/* ---- Merged app bar (29 Jul) --------------------------------------------
+   The green brand band and this nav row were two bands of chrome stacked on
+   top of each other — 46px + 41px before a single pixel of the actual
+   screen. They are now ONE green bar: brand · product tabs · context · user.
+   The active tab is still a white card, which reads as well on green as it
+   did on grey; everything else in the row turns to white-on-green. ---- */
+.pstrip-merged{background:var(--green);border-bottom:1px solid var(--green-deep);min-height:46px;}
+.pstrip-brand{flex:none;border:0;background:transparent;cursor:pointer;padding:0 16px 0 4px;
+  font-family:var(--figure);font-weight:700;font-size:17px;letter-spacing:.02em;color:#fff;
+  white-space:nowrap;line-height:1;}
+.pstrip-brand span{color:#D9F2C9;}
+.pstrip-brand:hover span{color:#fff;}
+.pstrip-brand:focus-visible,.pstrip-userbtn:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+.pstrip-merged .pstrip-home{color:#EAFBE2;}
+.pstrip-merged .pstrip-home:hover{background:rgba(255,255,255,.18);color:#fff;}
+.pstrip-merged .pstrip-tab{color:#EAFBE2;}
+.pstrip-merged .pstrip-tab:hover{background:rgba(255,255,255,.18);color:#fff;}
+.pstrip-merged .pstrip-tab.active{background:var(--card);color:var(--green-deep);
+  border-color:var(--green-deep);border-top-color:var(--green-deep);}
+.pstrip-merged .pstrip-tab.active:hover{background:var(--card);}
+.pstrip-merged .pstrip-ctx{border-left-color:rgba(255,255,255,.4);}
+.pstrip-merged .scope{color:#fff;}
+.pstrip-merged .monthbadge{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4);color:#fff;}
+.pstrip-merged .search{border-color:rgba(255,255,255,.5);}
+.pstrip-merged .segctl{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.15);}
+.pstrip-merged .segctl button{color:#EAFBE2;border-right-color:rgba(255,255,255,.4);}
+.pstrip-merged .segctl button:hover{color:#fff;}
+.pstrip-merged .segctl button.on{background:var(--card);color:var(--green-deep);}
+/* User chip — initials + name + caret, opening the account menu. */
+.pstrip-user{flex:none;}
+.pstrip-userbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.45);
+  background:rgba(255,255,255,.12);border-radius:3px;padding:3px 8px 3px 4px;cursor:pointer;
+  color:#fff;font:inherit;font-size:11px;white-space:nowrap;}
+.pstrip-userbtn:hover{background:rgba(255,255,255,.22);}
+.pstrip-userbtn .av{width:20px;height:20px;border-radius:50%;background:#fff;color:var(--green-deep);
+  display:inline-grid;place-items:center;font-family:var(--figure);font-size:9.5px;font-weight:700;flex:none;}
+.pstrip-userbtn .nm{font-weight:700;}
+.pstrip-userbtn .caret{opacity:.85;font-size:9px;}
+.pstrip-user .menu{top:calc(100% + 6px);}
+
+/* The product tabs are primary navigation and must never be the thing that
+   gets clipped. Measured: the full context group wants 834px, which starves
+   the tabs even at 1600px wide — so the context is COMPACT BY DEFAULT
+   (period, the loyalty sub-line, the search label and the user's name all
+   drop out) and only expands on a genuinely wide screen. */
+.pstrip-ctx .monthbadge{display:none;}
+.pstrip-ctx .loyalty small{display:none;}
+.pstrip-ctx .search{min-width:0;gap:0;padding:6px 9px;}
+.pstrip-ctx .search .lbl,.pstrip-ctx .search kbd{display:none;}
+.pstrip-userbtn .nm{display:none;}
+/* Small laptops: the loyalty chip is the next thing to go, so the five
+   product tabs still fit on one line rather than scrolling. */
+@media (max-width:1200px){ .pstrip-ctx .loyalty{display:none;} }
+@media (min-width:1700px){
+  .pstrip-ctx .monthbadge{display:inline-block;}
+  .pstrip-ctx .loyalty small{display:inline;}
+  .pstrip-ctx .search{min-width:190px;gap:8px;padding:6px 10px;}
+  .pstrip-ctx .search .lbl{display:inline;}
+  .pstrip-ctx .search kbd{display:inline;margin-left:auto;}
+  .pstrip-userbtn .nm{display:inline;}
+}
+
+/* ---- Level 0: hub — SSO launchpad. Full-width page, no rail, no strip. ---- */
+.hub{min-height:100vh;background:var(--paper);display:flex;justify-content:center;padding:56px 24px 64px;}
+.hub-inner{max-width:1080px;width:100%;}
+.hub-crest{display:flex;align-items:center;gap:12px;margin-bottom:26px;}
+.hub-crest .wm .n{font-family:var(--figure);font-weight:700;font-size:17px;color:var(--ink);letter-spacing:0;}
+.hub-crest .wm .n span{color:var(--green);}
+.hub-crest .wm .t{font-family:var(--figure);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.hub h1{margin-top:2px;}
+.hub-sso{display:inline-flex;align-items:center;gap:9px;margin:20px 0 8px;padding:8px 16px;
+  border:1px solid var(--line);border-radius:3px;background:var(--card);
+  font-size:11.5px;color:var(--ink-soft);}
+.hub-sso-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--good);box-shadow:0 0 0 3px rgba(11,154,65,.16);}
+.hub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;}
+.hub-tile{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:0 20px 18px;
+  position:relative;cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .05s;}
+.hub-tile:hover{border-color:var(--muted);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.hub-tile:active{transform:translateY(1px);}
+.hub-tile:focus-visible{outline:2px solid var(--green);outline-offset:3px;}
+.hub-tile-rule{position:absolute;left:-1px;right:-1px;top:0;height:4px;
+  background:var(--lime);border-radius:3px 3px 0 0;}
+.hub-tile-mark{width:34px;height:34px;margin-top:20px;border-radius:4px;display:grid;place-items:center;
+  font-size:16px;font-weight:700;color:#fff;background:var(--green);border:1px solid var(--green-deep);}
+.hub-tile-name{font-family:var(--figure);font-size:15px;font-weight:700;margin:14px 0 6px;color:#2b2b2b;}
+.hub-tile-desc{font-size:11.5px;color:var(--muted);line-height:1.45;min-height:37px;}
+.hub-tile-cta{margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-family:var(--figure);
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;
+  background:var(--green);border:1px solid var(--green-deep);border-radius:3px;padding:6px 12px;}
+.hub-tile-cta .arw{transition:transform .12s;}
+.hub-tile:hover .hub-tile-cta{background:var(--green-deep);}
+.hub-tile:hover .hub-tile-cta .arw{transform:translateX(4px);}
+.hub-sectlab{margin-top:34px;}
+
+/* ---- Home dashboard: portfolio roll-up strip + per-product analytics ----
+   Current PartsCheck kit: white boxes, hairline #ccc, 3px radius, Arial
+   figures, green last-bar over grey spark, grey uppercase labels. */
+.hub-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px;}
+.hub-stat{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:14px 16px;border-top:3px solid var(--green);}
+.hub-stat .v{font-family:var(--figure);font-size:24px;font-weight:700;color:#2b2b2b;display:block;line-height:1.05;}
+.hub-stat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:7px;display:block;}
+.hub-stat .d{font-size:11px;font-weight:700;margin-top:8px;display:inline-block;}
+.hub-stat .d.up{color:var(--good);}
+.hub-stat .d.down{color:var(--bad);}
+.hub-stat .d.flat{color:var(--muted);}
+
+.hub-tile-delta{position:absolute;top:18px;right:16px;font-family:var(--figure);font-size:12px;font-weight:700;}
+.hub-tile-delta.up{color:var(--good);}
+.hub-tile-delta.down{color:var(--bad);}
+.hub-tile-delta.flat{color:var(--muted);}
+
+.hub-tile-analytics{margin-top:14px;padding-top:14px;border-top:1px solid var(--gauge);}
+.hub-tile-metric{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.hub-tile-metric .v{font-family:var(--figure);font-size:25px;font-weight:700;color:#2b2b2b;line-height:1;}
+.hub-tile-metric .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.hub-spark{display:flex;align-items:flex-end;gap:3px;height:30px;margin:12px 0 14px;}
+.hub-spark-bar{flex:1;background:var(--gauge);border-radius:0;min-height:3px;}
+.hub-spark-bar.last{background:var(--green);}
+.hub-tile-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.hub-kpi .v{font-family:var(--figure);font-size:15px;font-weight:700;color:#2b2b2b;display:block;line-height:1.1;}
+.hub-kpi .l{font-size:9.5px;color:var(--muted);margin-top:3px;display:block;line-height:1.25;}
+.hub-tile-flag{margin-top:13px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;}
+.hub-tile-flag .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;}
+.hub-tile-flag.act{color:var(--warn);}
+.hub-tile-flag.ok{color:var(--good);}
+
+/* ---- Left rail: light-grey feature nav with a green active item ---- */
+.rail{background:#F2F2F2;color:#3D3D3D;position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--line);}
+.rail canvas.turn{display:none;} /* no decorative engine-turn texture in the current kit */
+.rail>*{position:relative;z-index:1;}
+.nameplate{padding:16px 14px 0;}
+.crest{display:flex;align-items:center;gap:12px;}
+
+/* Brand mark: solid green rounded square with a bold white "P" (current
+   PartsCheck mark) — replaces the Evolved skin's brass-ring/gold-face tick
+   roundel. Same wrapper classes (.roundel/.core) so markup is unchanged. */
+.roundel{width:34px;height:34px;flex:none;border-radius:8px;padding:0;background:var(--green);
+  box-shadow:0 1px 2px rgba(0,0,0,.18);}
+.roundel .core{width:100%;height:100%;border-radius:8px;
+  background:var(--green);
+  display:grid;place-items:center;color:#fff;font-weight:800;font-family:var(--figure);font-size:17px;line-height:1;}
+
+.crest .wm{line-height:1;}
+.crest .wm .n{font-family:var(--figure);font-weight:700;font-size:15px;letter-spacing:0;color:#222222;}
+.crest .wm .n span{color:var(--green);}
+.crest .wm .t{font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#777777;margin-top:5px;}
+.plate-rule{height:1px;margin:14px 0 0;background:var(--line);}
+
+.navsec{padding:6px 10px;}
+.navsec .lab{font-family:var(--figure);font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:#9A9A9A;padding:14px 10px 5px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:0;
+  color:#3D3D3D;font-weight:400;font-size:12px;margin:0;position:relative;border-left:3px solid transparent;
+  cursor:pointer;transition:background .12s ease,color .12s ease;}
+.nav-item:hover{background:#E9E9E9;}
+.nav-item .ic{width:16px;text-align:center;opacity:.85;font-size:13px;}
+.nav-item .ct{margin-left:auto;font-size:9.5px;font-weight:700;background:var(--muted);
+  color:#fff;border-radius:9px;padding:0 7px;}
+.nav-item.active{background:#fff;color:var(--green-deep);font-weight:700;border-left-color:var(--green);box-shadow:none;}
+.nav-item.active .ct{background:var(--green);color:#fff;}
+.nav-item.active::before{content:none;}
+.nav-item.legacy .ic{opacity:.6;}
+.rail-foot{margin-top:auto;padding:12px 14px;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;}
+.rail-foot .av{width:28px;height:28px;border-radius:50%;padding:0;background:var(--muted);}
+.rail-foot .av .core{width:100%;height:100%;border-radius:50%;background:var(--muted);color:#fff;
+  display:grid;place-items:center;font-weight:700;font-size:10.5px;}
+.rail-foot .who{font-size:11px;line-height:1.3;}
+.rail-foot .who b{color:#222222;font-weight:700;display:block;}
+.rail-foot .who span{color:#777777;font-size:10.5px;}
+
+/* ---- Top bar ---- */
+.topbar{position:sticky;top:0;z-index:5;background:#FFFFFF;
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 20px;}
+.scope{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;color:#222222;}
+.scope .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px rgba(11,154,65,.16);}
+.scope select{font:inherit;font-family:var(--sans);font-size:11px;color:var(--muted);border:1px solid var(--line);
+  background:var(--card);border-radius:3px;padding:3px 6px;}
+.loyalty{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--green);border-radius:3px;
+  padding:4px 11px;font-size:11px;font-weight:700;color:var(--green-deep);background:#fff;cursor:pointer;}
+.loyalty .pip{font-family:var(--figure);color:var(--green-deep);font-weight:700;}
+.loyalty small{font-weight:600;color:#636363;font-size:10px;}
+.loyalty:hover{background:var(--green-wash);}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--faint);
+  border:1px solid var(--line);background:#fff;border-radius:3px;padding:6px 10px;font-size:11px;min-width:190px;}
+.search kbd{margin-left:auto;font:inherit;font-size:10px;background:#EEEEEE;border:1px solid var(--line);
+  border-radius:2px;padding:1px 5px;color:var(--muted);}
+
+/* ---- Content / page head ---- */
+.content{padding:22px 24px 48px;max-width:1320px;width:100%;}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:6px;}
+.kicker{font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#636363;
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.kicker::before{content:"";width:20px;height:3px;background:var(--lime);display:inline-block;}
+h1{font-family:var(--figure);font-size:22px;line-height:1.2;margin:0;font-weight:700;letter-spacing:0;color:#222222;}
+h1 em{font-style:normal;color:var(--green);}
+.sub{color:var(--muted);font-size:12px;margin:8px 0 0;max-width:58ch;}
+.head-actions{display:flex;gap:8px;flex-shrink:0;}
+
+/* ---- Buttons: solid green primary, ghost outline, grey secondary — all
+   Arial uppercase, per production commonCSS.php button grammar ---- */
+/* SOLID GREEN IS `.btn-primary` ONLY (29 Jul). The base `.btn` used to be
+   solid green too, with a ghost treatment scoped to `.head-actions` /
+   `.pagehead` — so every button outside those two containers rendered as a
+   commit action. On the quote screen that meant SEVEN green buttons at
+   once, flatly against this system's own rule ("green = act, reserved for
+   the single commit CTA") and against what DESIGN-SYSTEM.md already
+   claimed. The ghost is now the base and the scoped rules are gone; a
+   button that really is the one commit action opts IN with .btn-primary. */
+.btn{font-family:var(--figure);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+  border-radius:3px;padding:7px 13px;border:1px solid var(--green);
+  background:#fff;color:var(--green);cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  transition:background .12s,border-color .12s,transform .05s;}
+.btn:hover{background:var(--green-wash);}
+.btn:active{transform:translateY(1px);}
+.btn:disabled{opacity:.45;cursor:default;}
+/* Size variant — a row's own call to action (the quote list's Open) needs
+   to be hittable and readable, not a 24px icon. */
+.btn-lg{padding:9px 20px;font-size:12px;letter-spacing:.04em;}
+.btn-primary{background:var(--green);border-color:var(--green-deep);color:#fff;}
+.btn-primary:hover{background:var(--green-deep);border-color:var(--green-deep);}
+.btn .ct{background:var(--green-wash);border-radius:9px;padding:0 6px;font-size:10px;}
+.btn-primary .ct{background:rgba(255,255,255,.28);}
+
+/* ---- Section label rule: grey uppercase label + lime-tinted hairline ---- */
+.sectlab{display:flex;align-items:center;gap:12px;margin:22px 0 12px;}
+.sectlab h2{font-family:var(--figure);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0;color:#2b2b2b;white-space:nowrap;padding-bottom:4px;border-bottom:3px solid var(--lime);}
+.sectlab .rule{height:1px;flex:1;background:var(--line);}
+.sectlab .hint{font-size:11px;color:var(--faint);white-space:nowrap;}
+.sectlab .tally{font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.02em;color:#fff;background:var(--green);
+  border:1px solid var(--green-deep);border-radius:9px;padding:2px 9px;white-space:nowrap;}
+
+/* ---- Value ribbon (repairer) ---- */
+.vribbon{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:20px 0 4px;
+  background:var(--card-2);border:1px solid var(--line);border-radius:3px;
+  padding:13px 18px;}
+.vribbon .seal{width:50px;height:50px;flex:none;border-radius:50%;padding:0;background:var(--green);
+  box-shadow:none;}
+.vribbon .seal .core{width:100%;height:100%;border-radius:50%;
+  background:var(--green);display:grid;place-items:center;
+  color:#fff;font-family:var(--figure);text-align:center;line-height:.9;}
+.vribbon .seal .core b{font-size:13px;}
+.vribbon .seal .core small{font-size:6.5px;letter-spacing:.06em;color:#fff;font-family:var(--sans);font-weight:700;}
+.vribbon .big{font-family:var(--figure);font-size:24px;font-weight:700;color:var(--ink);}
+.vribbon .big em{font-style:normal;font-size:12px;font-weight:600;color:var(--muted);font-family:var(--sans);}
+.vribbon .txt{color:var(--ink-soft);font-size:12px;max-width:48ch;}
+.vribbon .txt b{color:var(--green-deep);}
+
+/* ---- Do today: action queue, table-row grammar ---- */
+.queue-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;align-items:start;}
+.today{background:var(--card);border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.today-h{display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EEEEEE;
+  border-bottom:1px solid var(--line);}
+.today-h .clip{font-family:var(--figure);font-size:13px;color:#636363;}
+.today-h h3{margin:0;font-family:var(--figure);font-size:13px;font-weight:700;color:#2b2b2b;}
+.today-h .meta{margin-left:auto;font-size:10.5px;color:var(--faint);}
+.job{display:grid;grid-template-columns:5px 32px 1fr auto auto;align-items:center;gap:12px;
+  padding:10px 16px 10px 0;border-bottom:1px solid #E2E2E2;position:relative;}
+.job:last-child{border-bottom:0;}
+.job:hover{background:var(--card-2);}
+.job .stripe{align-self:stretch;border-radius:0;}
+/* Deliberate colour: one hue per row, carried by the stripe + deadline
+   text only. Red is exclusive to blocking/overdue, amber to time-bound
+   today; routine (plan) rows get no colour at all. */
+.job.u-now .stripe{background:var(--bad);}
+.job.u-soon .stripe{background:var(--warn);}
+.job.u-plan .stripe{background:transparent;}
+/* Badges are neutral chrome — the icon identifies the task, it doesn't alarm. */
+.job .badge{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;font-size:14px;
+  color:#555;background:var(--gauge);border:1px solid var(--line);}
+/* Urgency group headers — words first, one dot of hue second. */
+.jgroup{display:flex;align-items:center;gap:7px;padding:6px 16px;background:#FAFAFA;
+  border-bottom:1px solid var(--gauge);font-family:var(--figure);font-size:9.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.jgroup .dot{width:7px;height:7px;border-radius:50%;flex:none;background:#BBBBBB;}
+.jgroup.u-now .dot{background:var(--bad);}
+.jgroup.u-soon .dot{background:var(--warn);}
+.jgroup .ct{color:var(--faint);}
+.job .jt2{font-size:12.5px;font-weight:700;line-height:1.25;color:#2b2b2b;}
+.job .jt2 .apm{font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;
+  background:var(--warn);border-radius:9px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+.job .jsub{font-size:11px;color:var(--muted);margin-top:2px;}
+.job .when{text-align:right;font-size:10px;font-weight:700;white-space:nowrap;}
+.job.u-now .when{color:var(--bad);}
+.job.u-soon .when{color:var(--warn);}
+.job.u-plan .when{color:var(--faint);}
+.job .when small{display:block;font-weight:500;color:var(--faint);font-size:9.5px;margin-top:1px;}
+.job .act{font-family:var(--figure);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+  border-radius:3px;padding:7px 13px;cursor:pointer;white-space:nowrap;
+  background:var(--green);color:#fff;border:1px solid var(--green-deep);}
+.job .act:hover{background:var(--green-deep);}
+.job .act.ghost{background:#fff;color:var(--green-deep);border:1px solid var(--green);box-shadow:none;}
+.job .act.ghost:hover{background:var(--green-wash);}
+.job .act:disabled{opacity:.45;cursor:default;box-shadow:none;}
+.job .act:disabled:hover{background:#fff;}
+
+/* ---- Today's shape (standalone panel, repairer queue-grid) ---- */
+.tshape{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:14px 16px;}
+.tshape .th{display:flex;align-items:baseline;justify-content:space-between;}
+.tshape .th h3{margin:0;font-family:var(--figure);font-size:13px;font-weight:700;color:#2b2b2b;}
+.tshape .th .m{font-size:10.5px;color:var(--faint);}
+
+/* signals folded into pipeline cards */
+.card-sig{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:3px;overflow:hidden;margin-top:12px;}
+.card-sig .s{background:var(--card-2);padding:8px 10px;}
+.card-sig .sl{font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.card-sig .sv{font-family:var(--figure);font-size:14px;font-weight:700;margin-top:2px;line-height:1;color:#2b2b2b;}
+.card-sig .sd{font-size:10px;font-weight:700;margin-top:3px;}
+.sd.pos{color:var(--good);}
+.sd.neg{color:var(--bad);}
+.sd.flat{color:var(--faint);}
+
+/* ---- JTBD grid: pipeline cards, boxed stat-panel grammar with big green
+   number + grey label + lime under-border (adminBox stat-box lookalike),
+   keeping the .card/.card-sig/.cta structure from the shared views. ---- */
+.jtbd{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.jtbd.x5{grid-template-columns:repeat(5,1fr);gap:12px;}
+.card{background:#EEEEEE;border:1px solid var(--line);border-radius:0 0 3px 3px;padding:0 16px 16px;position:relative;
+  display:flex;flex-direction:column;min-width:0;transition:border-color .12s,box-shadow .12s;}
+.card::before{content:"";position:absolute;left:-1px;right:-1px;top:-4px;height:4px;
+  background:var(--lime);border-radius:3px 3px 0 0;}
+.card:hover{border-color:var(--muted);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.card.priority{border-color:var(--green);}
+.card.priority::before{background:var(--green);height:4px;}
+.card.train::before{background:var(--lime);}
+.prio-tab{position:absolute;top:0;right:12px;font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#fff;background:var(--green);border:1px solid var(--green-deep);border-top:0;padding:3px 8px 2px;border-radius:0 0 3px 3px;}
+.card .step{display:flex;align-items:center;gap:8px;padding:14px 0 10px;}
+.plateno{font-family:"Courier New",monospace;font-weight:700;font-size:11.5px;color:#fff;
+  background:var(--muted);border:1px solid var(--muted);border-radius:2px;padding:2px 6px;
+  letter-spacing:.03em;}
+.card .jt{font-family:var(--figure);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#636363;}
+.card .big{font-family:var(--figure);font-size:32px;font-weight:700;letter-spacing:0;line-height:1;color:var(--green-deep);}
+.card .ct-title{font-size:13px;font-weight:700;margin:8px 0 3px;color:#2b2b2b;}
+.card .ct-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+.card .ct-sub .up{color:var(--good);font-weight:700;}
+.card .ct-sub .dn{color:var(--bad);font-weight:700;}
+.inset{margin:12px 0 0;padding:9px 11px;background:var(--card-2);border:1px solid var(--line);border-radius:3px;
+  font-size:11px;color:var(--ink-soft);}
+.inset.warn{background:var(--bad-wash);border-color:rgba(165,52,31,.28);color:var(--bad);font-weight:600;}
+.inset.now{background:var(--warn-wash);border-color:rgba(164,83,31,.3);color:var(--warn);font-weight:600;}
+
+/* ---- CTA (card footer + standalone): ghost-outline by default, solid when flagged ---- */
+.cta{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:3px;
+  background:#fff;color:var(--green-deep);border:1px solid var(--green);font-family:var(--figure);font-weight:700;
+  font-size:11px;text-transform:uppercase;letter-spacing:.02em;cursor:pointer;transition:background .12s;}
+.cta:hover{background:var(--green-wash);}
+.cta.solid{background:var(--green);color:#fff;border-color:var(--green-deep);}
+.cta.solid:hover{background:var(--green-deep);}
+.cta.ghost{background:#fff;color:var(--green-deep);border:1px solid var(--green);box-shadow:none;}
+.cta.ghost:hover{background:var(--green-wash);}
+.cta .arw{transition:transform .12s;}
+.cta:hover .arw{transform:translateX(4px);}
+
+/* Today card — hourly day strip + 2×2, simple flat green bars */
+.daystrip{display:flex;align-items:flex-end;gap:3px;height:40px;margin:12px 0 4px;}
+.daystrip .bar{flex:1;background:var(--green);border-radius:1px;opacity:.85;min-height:3px;}
+.daystrip .bar.now{background:var(--lime);opacity:1;}
+.daystrip-cap{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-bottom:8px;}
+.grid22{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:4px;}
+.grid22 .cell{background:var(--card-2);padding:8px 10px;}
+.grid22 .cl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.grid22 .cv{font-family:var(--figure);font-size:15px;font-weight:700;margin-top:2px;color:#2b2b2b;}
+
+/* ---- KPI strip: 6 tiles ---- */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+.kpi{background:#EEEEEE;border:1px solid var(--line);border-radius:0 0 3px 3px;padding:11px 12px;position:relative;}
+.kpi::before{content:"";position:absolute;left:-1px;right:-1px;top:-4px;height:4px;background:var(--lime);border-radius:3px 3px 0 0;}
+.kpi .kl{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:6px;min-height:22px;}
+.kpi .kl .ic{color:#636363;font-size:11px;}
+.kpi .kv{font-family:var(--figure);font-size:22px;font-weight:700;letter-spacing:0;line-height:1.1;margin-top:6px;color:var(--green-deep);}
+.kpi .ks{font-size:10.5px;color:var(--faint);margin-top:4px;}
+.kpi .kd{font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:baseline;gap:5px;}
+.kd.pos{color:var(--good);}
+.kd.neg{color:var(--bad);}
+.kd.flat{color:var(--warn);}
+.kd .sfx{font-weight:500;color:var(--faint);font-size:10px;}
+.pill{display:inline-flex;align-items:center;font-size:8.5px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:9px;padding:1px 7px;}
+.pill.train{background:var(--warn-wash);color:var(--warn);}
+
+/* ---- Panels, bar lists, mix bars: boxed with grey box-header ---- */
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:3px;overflow:hidden;display:flex;flex-direction:column;}
+.panel.brassy{border-color:var(--muted);}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 14px;
+  background:#EEEEEE;border-bottom:1px solid var(--line);}
+.panel-h h3{margin:0;font-family:var(--figure);font-size:12.5px;font-weight:700;color:#2b2b2b;}
+.panel-h .meta{font-size:10.5px;color:var(--faint);white-space:nowrap;}
+.panel-b{padding:10px 14px 14px;}
+
+.barlist .brow{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;padding:6px 0;}
+.barlist .bl{font-size:12px;font-weight:600;}
+.barlist .bl small{display:block;font-weight:500;color:var(--faint);font-size:10px;}
+.barlist .btrack{height:8px;border-radius:2px;background:var(--gauge);overflow:hidden;}
+.barlist .bfill{height:100%;border-radius:2px;}
+.t-pc{background:var(--tone-pc);}
+.t-kb{background:var(--tone-kb);}
+.t-admin{background:var(--tone-admin);}
+.t-muted{background:var(--tone-muted);}
+.t-alt{background:var(--tone-alt);}
+.t-warn{background:var(--bad);}
+.barlist .bv{font-size:11.5px;font-weight:700;text-align:right;min-width:76px;}
+.barlist .bv small{color:var(--faint);font-weight:600;}
+.barlist .bv .wflag{color:var(--bad);}
+.barlist.reasons .brow{grid-template-columns:1fr auto;}
+.barlist.reasons .btrack{grid-column:1 / -1;}
+
+.mixbar{display:flex;height:11px;border-radius:2px;overflow:hidden;border:1px solid var(--line);}
+.mixbar .seg{height:100%;}
+.mixrows{margin-top:12px;}
+.mixrow{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:12px;}
+.mixrow .dot{width:9px;height:9px;border-radius:2px;flex:none;}
+.mixrow .nm{font-weight:600;}
+.mixrow .ct{margin-left:auto;color:var(--faint);font-size:10.5px;}
+.mixrow .pc{font-weight:700;min-width:34px;text-align:right;}
+
+.perfo{font-family:var(--figure);font-size:34px;font-weight:700;line-height:1;margin:4px 0 2px;color:var(--green-deep);}
+.perfo small{font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:600;}
+.statrows{margin-top:10px;}
+.statrows .sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E2E2E2;font-size:12px;}
+.statrows .sr:last-child{border-bottom:0;}
+.statrows .sl{color:var(--muted);}
+.statrows .sv{font-weight:700;}
+.statrows .sv.pos{color:var(--good);}
+
+.nlabig{font-family:var(--figure);font-size:28px;font-weight:700;color:var(--bad);line-height:1;}
+.nlasub{font-size:11px;color:var(--faint);margin-top:3px;}
+.tip{margin-top:12px;padding:9px 11px;background:var(--warn-wash);border:1px solid rgba(164,83,31,.32);border-radius:3px;font-size:11px;color:var(--warn);font-weight:600;}
+.tip .mk{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--warn);color:#fff;border-radius:2px;padding:1px 6px;margin-right:6px;}
+
+/* ---- Tables / ledgers: DataTables grammar — grey header, white uppercase
+   text, alternating rows, hover tint ---- */
+.tablewrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:420px;background:var(--card);}
+th{text-align:left;font-family:var(--figure);font-size:10px;font-weight:400;letter-spacing:.03em;text-transform:uppercase;color:#fff;
+  padding:8px 14px;border-bottom:0;background:var(--muted);}
+th.r,td.r{text-align:right;}
+td{padding:8px 14px;border-bottom:1px solid #E2E2E2;font-size:11.5px;vertical-align:middle;}
+tr:last-child td{border-bottom:0;}
+tr.row:nth-child(even) td{background:#FAFAFA;}
+tr.row:hover td{background:var(--green-wash);}
+.rname{font-weight:700;color:#2b2b2b;}
+.rsupp{font-size:10.5px;color:var(--faint);}
+.gmv{font-family:var(--figure);font-weight:700;}
+.disc{font-weight:700;color:var(--good);}
+.spend{font-family:var(--figure);font-weight:700;}
+.badge2{font-size:9.5px;font-weight:700;color:#636363;background:#EEEEEE;border:1px solid var(--line);border-radius:2px;padding:1px 6px;margin-left:6px;}
+.conv{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:12px;}
+.lamp{width:8px;height:8px;border-radius:50%;}
+.lamp.green{background:var(--good);box-shadow:0 0 0 2.5px rgba(11,154,65,.16);}
+.lamp.amber{background:var(--warn);box-shadow:0 0 0 2.5px rgba(164,83,31,.16);}
+.lamp.red{background:var(--bad);box-shadow:0 0 0 2.5px rgba(165,52,31,.15);}
+.flag{font-size:10px;font-weight:700;border-radius:2px;padding:2px 7px;letter-spacing:.02em;}
+.flag.a{background:var(--bad-wash);color:var(--bad);}
+.pos-b{font-weight:700;}
+.pos-b.best{color:var(--good);}
+.pos-b.mid{color:var(--warn);}
+.pos-b.low{color:var(--bad);}
+.vsnote{font-size:10.5px;color:var(--faint);}
+
+.footnote{font-size:10.5px;color:var(--faint);margin:16px 2px 0;max-width:72ch;}
+.embed-note{margin:26px 0 0;display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted);
+  background:#EEEEEE;border:1px dashed var(--muted);border-radius:3px;padding:10px 14px;}
+.embed-note b{color:#636363;}
+
+/* ---- Responsive breakpoints (same structure as the Evolved skin) ---- */
+@media (max-width:1240px){
+  .jtbd{grid-template-columns:repeat(3,1fr);}
+  .jtbd.x5{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:1180px){
+  .jtbd{grid-template-columns:1fr 1fr;}
+  .kpis{grid-template-columns:repeat(3,1fr);}
+  .grid3{grid-template-columns:1fr;}
+  .grid2{grid-template-columns:1fr;}
+  .hub-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:1120px){
+  .queue-grid{grid-template-columns:1fr;}
+}
+@media (max-width:980px){
+  :root{--rail:0px;}
+  .rail{display:none;}
+  .shell{grid-template-columns:1fr;}
+  h1{font-size:19px;}
+  /* Two-row chrome below 980px: green bar (menu · product · user) then the
+     context bar (scope · loyalty). The tab strip is hidden outright, so its
+     sideways scroll cannot happen — it is not shrunk, it is removed from
+     the layout. The Evolved path has no .pcframe, so its strip is untouched. */
+  .pcframe .pstrip{display:none;}
+  .pcframe .pc-topbar .pc-logo{display:none;}
+  /* Scoped to .pcframe (like .pstrip above) so this beats the unconditional
+     .pc-prodsel-wrap{display:none;} base rule declared later in this file
+     (the "Mockup alignment" section) — same specificity, later source order
+     would otherwise win and hide the select at every width. */
+  .pcframe .pc-prodsel-wrap{display:inline-flex;}
+  .topbar{flex-wrap:nowrap;row-gap:0;}
+  .search{display:none;}
+
+  /* Rail becomes a slide-over drawer on mobile/tablet, same mechanics as
+     the Evolved skin — only the visual treatment differs. */
+  .rail-hamburger{display:inline-flex;width:40px;height:40px;flex:none;align-items:center;justify-content:center;
+    border:0;background:transparent;color:#2b2b2b;font-size:18px;line-height:1;
+    border-radius:3px;cursor:pointer;margin-right:2px;}
+  .rail-hamburger:hover{background:rgba(0,0,0,.06);}
+  .rail-hamburger:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+  .rail{
+    display:flex;position:fixed;left:0;top:0;bottom:0;width:min(280px,84vw);height:100vh;z-index:40;
+    transform:translateX(-100%);transition:transform .22s ease;box-shadow:2px 0 14px rgba(0,0,0,.22);
+  }
+  .rail.rail-open{transform:translateX(0);}
+  .rail-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39;}
+  .rail-backdrop.rail-open{display:block;}
+  @media (prefers-reduced-motion:reduce){.rail{transition:none;}}
+}
+@media (max-width:720px){
+  .jtbd{grid-template-columns:1fr 1fr;}
+  .jtbd.x5{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:640px){
+  .jtbd,.kpis{grid-template-columns:1fr;}
+  .jtbd.x5{grid-template-columns:1fr;}
+  .content,.topbar{padding-left:16px;padding-right:16px;}
+  .pagehead{flex-direction:column;align-items:flex-start;}
+  .sectlab{flex-wrap:wrap;row-gap:4px;}
+  .sectlab .hint{white-space:normal;}
+  .sectlab .rule{flex-basis:100%;order:3;}
+
+  .hub{padding:22px 14px 30px;}
+  .hub-crest{margin-bottom:8px;}
+  .hub-crest .wm .n{font-size:14px;}
+  .hub .kicker{margin-bottom:4px;font-size:9px;}
+  .hub h1{font-size:16px;line-height:1.25;letter-spacing:0;}
+  .hub h1 em{display:block;font-size:11.5px;font-weight:600;margin-top:2px;}
+  .hub .sub{font-size:11.5px;margin:5px 0 0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hub-sso{display:flex;margin:8px 0 0;padding:5px 12px;white-space:nowrap;overflow:hidden;}
+  .hub-sso span:not(.hub-sso-dot){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hub-sectlab{margin:12px 0 6px;}
+  .hub-grid{grid-template-columns:1fr;gap:10px;margin-top:0;}
+
+  .hub-tile{display:flex;align-items:center;gap:14px;min-height:auto;min-width:0;padding:18px 14px;border-radius:3px;}
+  .hub-tile-rule{display:none;}
+  .hub-tile-mark{width:36px;height:36px;margin-top:0;flex:none;font-size:16px;}
+  .hub-tile-name{font-size:14.5px;margin:0;flex:none;}
+  .hub-tile-desc{font-size:11.5px;min-height:0;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hub-tile-name,.hub-tile-desc{flex:1;min-width:0;}
+  .hub-tile > div:nth-child(3),.hub-tile > div:nth-child(4){display:block;}
+  .hub-tile-cta{margin:0;flex:none;font-size:0;gap:0;padding:6px;}
+  .hub-tile-cta .arw{font-size:14px;}
+  .hub-tile:hover .hub-tile-cta .arw{transform:none;}
+  /* Portfolio strip stays (cross-product analytics at a glance), 2-up; the
+     per-tile analytics + delta are hidden so tiles stay compact launch rows. */
+  .hub-metrics{grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+  .hub-stat{padding:11px 12px;}
+  .hub-stat .v{font-size:19px;}
+  .hub-stat .l{font-size:9px;margin-top:5px;}
+  .hub-stat .d{font-size:10px;margin-top:5px;}
+  .hub-tile-delta,.hub-tile-analytics{display:none;}
+
+  /* Narrow: the strip becomes two rows — tabs, then the context group
+     spanning full width beneath them — rather than squeezing both. */
+  .pstrip{flex-wrap:wrap;height:auto;padding-bottom:6px;}
+  .pstrip-ctx{margin-left:0;padding-left:10px;border-left:0;width:100%;height:auto;
+    justify-content:flex-start;gap:8px;}
+  .scope{font-size:11.5px;gap:6px;min-width:0;flex:1 1 auto;overflow:hidden;}
+  .scope span:not(.dot){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* The scope select stays at mobile — it is real functionality, and the
+     two-row layout leaves room for it (119 + 85 + 77px inside 366px). */
+  .scope select{flex:none;max-width:38vw;}
+  .loyalty{padding:4px 8px;font-size:10px;gap:5px;flex:none;}
+  .loyalty small{display:none;}
+  /* Touch-target minimum (WCAG 2.5.8, 24px): the select's font-size/padding
+     alone computed to ~28px. Scoped to .pcframe (same reason as the
+     .pcframe .pc-prodsel-wrap rule above) so this beats the unconditional
+     .pc-prodsel{padding:...} base rule declared later in this file (the
+     "Mockup alignment" section) — same specificity, later source order
+     would otherwise win and this override would silently do nothing. */
+  .pcframe .pc-prodsel{padding:9px;}
+
+  .pstrip{padding:2px 6px;min-height:46px;height:auto;}
+  .pstrip-tab{padding:12px 11px;font-size:11px;min-height:44px;display:inline-flex;align-items:center;flex-shrink:0;}
+
+  /* Footer at mobile: the note drops, the two controls stay and left-align. */
+  .pc-foot-note,.pc-foot-spacer{display:none;}
+  .pc-footer{padding:9px 12px;gap:8px;}
+  .pc-foot-roles-label{display:none;}
+  /* Touch-target minimum (WCAG 2.5.8, 24px): this button computed to 22px
+     tall (font-size 10px * line-height 1.4 + 4px padding), under the
+     minimum and worse than the ~26px control it replaced. No conflicting
+     min-height on the base rule, so this is safe unscoped. */
+  .pc-foot-role{min-height:32px;}
+}
+
+/* =====================================================================
+   Consumables — approved list, shopping run, SKU comparison (2 Jul sprint).
+   Current PartsCheck kit: white boxes, #ccc hairlines, 3px radius, grey
+   uppercase table headers, green uppercase buttons, Verdana body.
+   ===================================================================== */
+.cstepper{display:flex;gap:0;margin:0 0 14px;background:var(--card);border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.cstep{flex:1;text-align:left;padding:10px 14px;border:none;border-bottom:3px solid var(--line);border-right:1px solid var(--line);background:var(--card);cursor:pointer;font-family:var(--sans);}
+.cstep:last-child{border-right:none;}
+.cstep b{display:block;font-family:var(--figure);font-size:12px;font-weight:700;color:var(--ink);}
+.cstep span{display:block;font-size:10px;color:var(--muted);margin-top:2px;}
+.cstep.on{border-bottom-color:var(--green);background:var(--card);}
+.cstep.on b{color:var(--green-deep);}
+.cstep.done{border-bottom-color:var(--lime);}
+/* An unreachable step is disabled and reduced-contrast, not a live button
+   that silently swallows the click. `.cstep-static` is the display-only
+   fourth step shown once the run is placed. */
+.cstep[disabled],.cstep.off{cursor:default;background:var(--card-2);}
+.cstep[disabled] b,.cstep.off b{color:var(--muted);}
+.cstep[disabled] span,.cstep.off span{color:var(--line-strong);}
+.cstep-static{cursor:default;}
+
+.cdept{padding:7px 14px;font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--gauge);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.crow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--gauge);cursor:pointer;font-size:11px;}
+.crow:hover{background:var(--card-2);}
+.crow.picked{background:var(--green-wash);}
+.crow.static{cursor:default;}
+.crow.static:hover{background:transparent;}
+.crow.tall{align-items:flex-start;padding:11px 14px;}
+/* The floor search HIDES rows rather than removing them, so the pick list
+   stays a faithful mirror of the approved list whatever is typed. */
+.crow.chide,.cdept.chide{display:none;}
+.crow-sub{display:block;font-size:9.5px;color:var(--muted);margin-top:2px;}
+/* The tick is drawn the way .checkbox draws it — an SVG mark, not a ✓
+   glyph (the system's icons are SVG). */
+.cbox{width:20px;height:20px;flex:none;border:2px solid var(--line);border-radius:3px;background-color:var(--card);}
+.crow.picked .cbox{background-color:var(--green);border-color:var(--green-deep);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='7' viewBox='0 0 9 7'><path d='M1 3.5l2.5 2.5L8 1' stroke='white' stroke-width='2' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:center;}
+.cnm{flex:1;min-width:0;color:var(--ink);}
+.ccat{font-size:9.5px;color:var(--muted);white-space:nowrap;}
+/* A lock is a standing configuration, not a time-bound warning — amber is
+   reserved for the latter (one hue, one meaning). */
+.locktag{font-size:9.5px;font-weight:700;color:var(--muted);background:var(--gauge);border:1px solid var(--line);border-radius:2px;padding:1px 6px;white-space:nowrap;}
+.icon-lock{vertical-align:-1px;}
+
+/* The run bar carries the count and the step CTA; on a long pick list or a
+   tall grid it has to stay reachable, so it sticks to the bottom. */
+.crunbar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:3px;padding:10px 14px;margin:14px 0;
+  position:sticky;bottom:0;z-index:4;}
+.crun-n{font-family:var(--figure);font-size:12px;font-weight:700;color:var(--ink);}
+.crun-hint{flex:1;font-size:10.5px;color:var(--muted);}
+.crunbar .btn:disabled{opacity:.45;cursor:default;}
+.cg-delivered{font-weight:400;color:var(--muted);}
+.cg-delivered b{color:var(--ink);}
+.cpick-search{padding-bottom:0;}
+
+.csku{margin-bottom:14px;}
+.csku .panel-h{flex-wrap:wrap;row-gap:6px;}
+.skurow{cursor:pointer;}
+.skurow:hover td{background:var(--card-2);}
+.skurow.sel td{background:var(--green-wash);}
+.skurow.noacct{cursor:default;}
+.skurow.noacct td{opacity:.5;}
+.skurow.noacct td:last-child{opacity:1;}
+.skucode{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.starrow{color:var(--warn);font-size:10px;letter-spacing:1px;}
+.bestchip{font-size:9px;font-weight:700;color:var(--good);background:var(--green-wash);border:1px solid var(--good);border-radius:2px;padding:1px 5px;white-space:nowrap;}
+.fchip{display:inline-block;font-size:9.5px;font-weight:700;color:var(--warn);background:var(--warn-wash);border-radius:2px;padding:2px 6px;}
+.fchip.free{color:var(--good);background:var(--green-wash);}
+.selmark{font-family:var(--figure);font-size:11px;font-weight:700;color:var(--green-deep);white-space:nowrap;}
+.cqty{display:inline-flex;align-items:center;gap:8px;flex:none;}
+.cqty button{width:24px;height:24px;border:1px solid var(--line);border-radius:3px;background:var(--card);font-size:13px;font-weight:700;color:var(--green-deep);cursor:pointer;line-height:1;}
+.cqty button:hover{border-color:var(--green);}
+.cqty .ctotal{color:var(--ink);font-family:var(--figure);font-size:13px;min-width:16px;text-align:center;}
+.lockbar{padding:8px 14px;font-size:10.5px;color:var(--warn);background:var(--warn-wash);border-bottom:1px solid var(--line);}
+.lockline{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:11px 14px;font-size:11px;flex-wrap:wrap;}
+
+.crev{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start;}
+.cbasket{margin-bottom:14px;}
+.bline{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--gauge);font-size:11px;}
+.bline .bl{flex:1;min-width:0;}
+.bline .bval{white-space:nowrap;}
+.bline.bfreight{background:var(--gauge);font-weight:700;}
+/* Review lines are editable — the last place before commit where a
+   quantity can still be wrong. */
+.bline .cdrop{padding:3px 8px;font-size:9.5px;}
+.cbasket-notes{display:grid;gap:8px;padding:10px 14px 12px;}
+.ctotalbar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--ink);color:var(--card);border-radius:3px;padding:12px 16px;margin-bottom:14px;}
+.ctotalbar .meta{color:var(--gauge);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+.big2{font-family:var(--figure);font-size:22px;font-weight:700;}
+/* The bar is scaled to max(target, spent+order) so an overage has room to
+   render as its own red segment — clamping it into the remaining headroom
+   made "over budget" the one thing the budget control couldn't show. */
+.cbud{height:14px;border-radius:2px;background:var(--gauge);overflow:hidden;display:flex;margin:4px 0 6px;}
+.cbud .used{background:var(--green);}
+.cbud .add{background:var(--lime);}
+.cbud .over{background:var(--bad);}
+.cbud-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:9.5px;color:var(--muted);margin-bottom:10px;}
+.cbud-legend span{display:inline-flex;align-items:center;gap:5px;}
+.cbud-legend .k{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.cbud-legend .k.used{background:var(--green);}
+.cbud-legend .k.add{background:var(--lime);}
+.cbud-legend .k.over{background:var(--bad);}
+.cbud-alert{margin-top:10px;}
+.cbud-panel{margin-bottom:14px;}
+.kpis.cbud-kpis{grid-template-columns:repeat(3,1fr);margin-bottom:14px;}
+.kpi .kv.neg{color:var(--bad);}
+.ckv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gauge);font-size:11px;}
+.ckv .bad{color:var(--bad);}
+.cchip{margin-top:10px;font-size:10.5px;font-weight:700;border-radius:2px;padding:5px 8px;display:inline-block;}
+.cchip.ok{color:var(--good);background:var(--green-wash);}
+.cchip.bad{color:var(--card);background:var(--bad);}
+.cdone{max-width:560px;margin:20px auto;}
+.cdone .panel-b{text-align:center;padding:28px 24px;}
+.cdone-tick{width:44px;height:44px;margin:0 auto 10px;border-radius:50%;background:var(--green);color:var(--card);font-size:22px;font-weight:700;line-height:44px;}
+.cdone h2{font-family:var(--figure);font-size:15px;margin:0 0 6px;color:var(--ink);}
+.cdone .bline{text-align:left;border:1px solid var(--gauge);border-radius:3px;margin-top:6px;}
+.cdone-actions{margin-top:14px;}
+
+.clist{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start;}
+.csearch{width:100%;border:1px solid var(--line);border-radius:3px;padding:7px 10px;font-family:var(--sans);font-size:11px;margin-bottom:8px;}
+/* overflow-x hidden, not the default auto: a y-scroll container computes
+   x:visible up to auto, so a few px of invisible child overflow drew a
+   horizontal scrollbar under the list. Rows never place content past the
+   panel edge, so clipping x costs nothing. */
+.cscroll{max-height:480px;overflow-y:auto;overflow-x:hidden;}
+/* Neutral keyline: the invoice kick-start is an offer, not a warning. */
+.cimport{border-color:var(--line-strong);margin-bottom:14px;}
+.cimport .panel-b b{font-family:var(--figure);font-size:12px;color:var(--ink);}
+/* Open/Locked is the canonical .segctl (pressed = white card + green text).
+   The retired .cmodebtn went solid green when pressed, which read as a
+   second commit button on a screen that already has one. */
+/* flex, not inline-flex: the control belongs on its own line under the
+   type name (the margin-top already assumed so) — inline it shared the
+   name's line, crowding it and overflowing the panel at narrow widths.
+   .segctl.cmode, because .segctl's own inline-flex is declared later in
+   this file and would win a single-class selector. */
+.cmode{margin-top:6px;max-width:100%;}
+.segctl.cmode{display:flex;width:fit-content;}
+.cmode-note{font-size:9.5px;color:var(--muted);margin-top:4px;}
+.csel{display:block;margin-top:6px;max-width:100%;border:1px solid var(--line);border-radius:3px;padding:5px 8px;font-family:var(--sans);font-size:10.5px;background:var(--card);}
+.okchip{font-size:9.5px;font-weight:700;color:var(--good);background:var(--green-wash);border-radius:2px;padding:2px 7px;white-space:nowrap;}
+.badge2.warn{color:var(--warn);border-color:var(--warn);background:var(--warn-wash);}
+/* Lock-capture modal: SKU picker + reason, stacked. */
+.cform{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+
+@media (max-width:980px){
+  .cstepper{flex-direction:column;}
+  .cstep{border-bottom:1px solid var(--line);border-left:3px solid var(--line);border-right:none;}
+  .cstep.on{border-left-color:var(--green);}
+  .cstep.done{border-left-color:var(--lime);}
+  /* minmax(0,1fr), not 1fr: a bare `1fr` track is minmax(auto,1fr), and that
+     auto floor is the widest grid item's min-content width. The right-hand
+     column of .clist wraps its panels in a plain div (no overflow:hidden to
+     zero the floor), so the locked-SKU <select> (as wide as its longest
+     option) and the intrinsic width of the Open/Locked control pinned the
+     track at ~424px at every viewport. Both already carry max-width:100%,
+     which clamps them once the track is definite — only the intrinsic
+     floor was missing. */
+  .crev,.clist{grid-template-columns:minmax(0,1fr);}
+  /* .kpis.cbud-kpis is (0,2,0) and would otherwise out-specify the shared
+     .kpis stacking rules further down this file. */
+  .kpis.cbud-kpis{grid-template-columns:minmax(0,1fr);}
+  /* Once the track above stops stretching, a nowrap .meta is wider than the
+     panel and .panel{overflow:hidden} makes it unreachable rather than
+     scrollable. Let the header wrap at mobile — same treatment .csku
+     .panel-h already gets. */
+  .panel-h{flex-wrap:wrap;row-gap:4px;}
+  .panel-h .meta{white-space:normal;}
+  .crunbar{flex-wrap:wrap;}
+  .ccat{display:none;}
+}
+
+/* =====================================================================
+   Simulated legacy screens — the current production list pages (Quotes,
+   Orders, Credits, ...) reproduced with sample data. Current kit:
+   DataTables chrome — length selector + right search, grey sortable
+   headers, striped rows, Showing X to Y of Z entries + pager.
+   ===================================================================== */
+.lgc-tabs{display:flex;gap:0;margin:0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.lgc-tab{border:1px solid transparent;border-bottom:none;background:transparent;color:#555;cursor:pointer;
+  font-family:var(--figure);font-size:11px;padding:8px 14px;border-radius:3px 3px 0 0;}
+.lgc-tab:hover{color:#222;background:#fafafa;}
+.lgc-tab.on{background:var(--card);border-color:var(--line);color:var(--green);font-weight:700;
+  border-top:3px solid var(--green);padding-top:6px;margin-bottom:-1px;}
+.lgc-tab .ct{font-weight:700;color:var(--muted);margin-left:4px;}
+.lgc-tab.on .ct{color:var(--green-deep);}
+
+.lgc-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);
+  border:1px solid var(--line);border-top:none;flex-wrap:wrap;}
+.lgc-length{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;}
+.lgc-length select{border:1px solid var(--line);border-radius:3px;padding:3px 5px;font-family:var(--sans);font-size:11px;background:#fff;}
+.lgc-spacer{flex:1;}
+.lgc-search{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;}
+.lgc-search input{border:1px solid var(--line);border-radius:3px;padding:5px 8px;font-family:var(--sans);font-size:11px;width:180px;background:#fff;}
+.lgc-daterange{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;}
+.lgc-daterange input{border:1px solid var(--line);border-radius:3px;padding:4px 6px;font-family:var(--sans);font-size:10.5px;width:88px;background:#fff;}
+
+.lgc-grid{background:var(--card);border:1px solid var(--line);border-top:none;}
+.lgc-grid table{width:100%;border-collapse:collapse;}
+.lgc-grid th{background:var(--gauge);color:#444;font-family:var(--figure);font-size:10.5px;font-weight:700;
+  text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;}
+.lgc-grid th.r{text-align:right;}
+.lgc-grid th .sort{color:#999;font-size:9px;margin-left:3px;}
+.lgc-grid td{padding:8px 10px;border-bottom:1px solid var(--gauge);font-size:11px;vertical-align:middle;}
+.lgc-grid td.r{text-align:right;}
+.lgc-grid tbody tr:nth-child(even){background:#F9F9F9;}
+.lgc-grid tbody tr:hover{background:var(--green-wash);}
+.lgc-ref{font-family:var(--figure);font-weight:700;color:var(--green-deep);white-space:nowrap;}
+.lgc-sub{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.lgc-status{display:inline-block;font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 7px;white-space:nowrap;}
+.lgc-status.ok{color:var(--good);background:var(--green-wash);border:1px solid var(--good);}
+.lgc-status.warn{color:var(--warn);background:var(--warn-wash);border:1px solid var(--warn);}
+.lgc-status.bad{color:#fff;background:var(--bad);border:1px solid var(--bad);}
+.lgc-status.info{color:#555;background:var(--gauge);border:1px solid var(--line);}
+.lgc-status.new{color:#fff;background:var(--green);border:1px solid var(--green-deep);}
+.lgc-clock{font-family:var(--figure);font-weight:700;font-size:11px;white-space:nowrap;}
+.lgc-clock.low{color:var(--bad);}
+/* A row title that opens the record. The whole point is that the name is
+   the target, not just the button at the far right of the row — so it
+   carries link affordance and a real focus ring. */
+.lgc-open{background:none;border:0;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit;}
+.lgc-open .lgc-ref,.lgc-open .lgc-title{text-decoration:underline;text-decoration-color:transparent;
+  transition:text-decoration-color .12s;}
+.lgc-open:hover .lgc-ref,.lgc-open:hover .lgc-title{text-decoration-color:currentColor;}
+.lgc-title{font-weight:700;color:var(--ink);}
+.lgc-open:hover .lgc-title{color:var(--green-deep);}
+.lgc-open:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:2px;}
+.lgc-acts{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+/* Icon-only actions in a row. `:not(.btn)` so a real button in this slot
+   (the quote list's large Open) keeps its own size — the bare element
+   selector used to out-specify .btn-lg and squash it back to 24x22. */
+.lgc-acts button:not(.btn){border:1px solid var(--line);background:#fff;border-radius:3px;width:24px;height:22px;
+  cursor:pointer;font-size:11px;color:#555;}
+.lgc-acts button:not(.btn):hover{border-color:var(--green);color:var(--green-deep);}
+
+.lgc-foot{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--card);
+  border:1px solid var(--line);border-top:none;font-size:10.5px;color:var(--muted);flex-wrap:wrap;}
+.lgc-pager{margin-left:auto;display:flex;gap:3px;}
+.lgc-pager button{border:1px solid var(--line);background:#fff;border-radius:3px;padding:4px 9px;
+  font-family:var(--sans);font-size:10.5px;color:#555;cursor:pointer;}
+.lgc-pager button.on{background:var(--green);border-color:var(--green-deep);color:#fff;font-weight:700;}
+.lgc-pager button:disabled{opacity:.45;cursor:default;}
+
+.lgc-note{margin-top:10px;font-size:10px;color:var(--muted);}
+@media (max-width:980px){
+  .lgc-grid{overflow-x:auto;}
+  .lgc-grid table{min-width:760px;}
+  .lgc-search input{width:120px;}
+}
+
+/* Supplier orders status summary strip (New / Opened / Processed / ETA
+   Assigned / Backorders with due pills) — from supplier-orders-list. */
+.lgc-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0 0 12px;}
+.lgc-sumcard{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:10px 12px;border-top:3px solid var(--green);}
+.lgc-sumcard h4{margin:0 0 6px;font-family:var(--figure);font-size:11px;font-weight:700;color:#2b2b2b;}
+.lgc-sumcard .tv{font-family:var(--figure);font-size:14px;font-weight:700;color:var(--green-deep);margin-top:6px;}
+.lgc-pills{display:flex;flex-wrap:wrap;gap:4px;}
+.lgc-pill{font-size:9px;font-weight:700;border-radius:8px;padding:1px 7px;color:#fff;}
+.lgc-pill.red{background:var(--bad);}
+.lgc-pill.orange{background:var(--warn);}
+.lgc-pill.green{background:var(--good);}
+@media (max-width:980px){ .lgc-sum{grid-template-columns:1fr 1fr;} }
+.lgc-clock.ok{color:var(--good);}
+
+/* ---- Hub combined dashboard: needs-you queue + spend mix (2-up) ---- */
+.hub-combined{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-top:12px;align-items:start;}
+.hub-queue .hub-q{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--gauge);cursor:pointer;}
+.hub-queue .hub-q:last-child{border-bottom:0;}
+.hub-queue .hub-q:hover{background:var(--green-wash);}
+.hub-queue .hub-q:focus-visible{outline:2px solid var(--green);outline-offset:-2px;}
+.hub-q-mark{width:28px;height:28px;flex:none;border-radius:4px;display:grid;place-items:center;
+  font-size:13px;font-weight:700;color:#fff;background:var(--green);border:1px solid var(--green-deep);}
+.hub-q-body{flex:1;min-width:0;}
+.hub-q-body b{display:block;font-family:var(--figure);font-size:12px;color:#2b2b2b;}
+.hub-q-detail{display:block;font-size:10.5px;color:var(--muted);margin-top:2px;}
+.hub-q-ct{flex:none;min-width:22px;text-align:center;font-family:var(--figure);font-size:11px;font-weight:700;
+  color:var(--warn);background:var(--warn-wash);border:1px solid var(--warn);border-radius:2px;padding:2px 7px;}
+.hub-q-go{flex:none;color:var(--green-deep);font-weight:700;}
+@media (max-width:980px){
+  .hub-combined{grid-template-columns:1fr;gap:8px;margin-top:8px;}
+  .hub-q-detail{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+}
+
+/* =====================================================================
+   Mockup alignment — brings this build in line with the approved
+   current-look mockup (artifact "PartsCheck nav & dashboards — current
+   look & feel"): green brand topbar, full-width tab row + context bar,
+   grey stat boxes with lime bottom edges and green figures, solid-grey
+   table headers with white uppercase text, lime-underlined section
+   headers, boxy hub tiles with grey header bars. Appended last so these
+   rules win over the earlier base styles.
+   ===================================================================== */
+
+/* Green brand topbar (mockup .pc-topbar) */
+.pc-topbar{background:var(--green);color:#fff;display:flex;align-items:center;padding:0 14px;height:46px;}
+/* The gap between the bar's own children (hamburger/logo/select) is scoped
+   to where pcBrandBar() actually renders — inside .pcframe (the app's
+   product/placeholder pages) or .hub (the launchpad, which has no
+   .pcframe) — rather than on the bare .pc-topbar class. design-system.html
+   reuses .pc-topbar unmodified for its own two-span header and sets its
+   own margin-left on the second span; an unscoped gap here would silently
+   add to that spacing (8px -> 18px) on a page this branch never renders
+   through pcBrandBar(). */
+.pcframe .pc-topbar,.hub .pc-topbar{gap:10px;}
+.pc-logo{font-family:var(--figure);font-weight:700;font-size:17px;letter-spacing:.02em;}
+.pc-logo span{color:#D9F2C9;}
+
+/* Mobile product switcher — hidden by default, shown ≤980px where it takes
+   the wordmark's place and stands in for the whole tab strip. */
+.pc-prodsel-wrap{display:none;position:relative;align-items:center;min-width:0;}
+.pc-prodsel{font:inherit;font-family:var(--figure);font-size:15px;font-weight:700;color:#fff;
+  background:transparent;border:0;border-radius:3px;padding:5px 24px 5px 7px;cursor:pointer;
+  max-width:52vw;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;}
+.pc-prodsel:hover{background:rgba(255,255,255,.16);}
+.pc-prodsel:focus-visible{outline:2px solid #fff;outline-offset:1px;}
+/* The dropdown list renders in the OS palette, not on green. */
+.pc-prodsel option{color:var(--ink);background:var(--card);font-size:12px;}
+.pc-prodsel-caret{position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  pointer-events:none;font-size:11px;color:#fff;}
+/* The green bar's hamburger is white, unlike the strip's dark one. */
+.pc-bar-burger{color:#fff;margin-right:0;}
+.pc-bar-burger:hover{background:rgba(255,255,255,.18);}
+/* Without this, the button inherits .rail-hamburger's var(--green) outline —
+   invisible against this bar's own green background. */
+.pc-bar-burger:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+.pc-top-right{margin-left:auto;font-size:11px;display:flex;align-items:center;gap:14px;}
+.pc-top-right a{color:#EAFBE2;text-decoration:none;}
+/* The divider is a border on the first link, not a literal "|" — so it
+   disappears with the links when they hide at ≤980px. */
+.pc-top-right a:first-of-type{border-left:1px solid rgba(255,255,255,.35);padding-left:14px;}
+.pc-top-right a:hover{color:#fff;text-decoration:underline;}
+.pc-top-right .u{font-weight:700;}
+a.pc-logo{text-decoration:none;color:inherit;}
+a.pc-logo:hover span{color:#fff;}
+
+/* Global footer — the prototype's own strip: identifying note, the
+   Supplier/Repairer switch, and the Design System link. */
+.pc-footer{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--card);
+  border-top:1px solid var(--line);font-size:10.5px;color:var(--faint);}
+/* --muted and --faint are the same #636363 — color:var(--muted) here was a
+   no-op against .pc-footer's own color:var(--faint). --ink (body copy's own
+   default colour, see tokens.css) differentiates the note for real: a touch
+   darker/more legible than the rest of the footer, without adding weight or
+   a new hue. */
+.pc-foot-note{color:var(--ink);}
+.pc-foot-spacer{flex:1;}
+.pc-foot-link{font-weight:700;color:var(--green-deep);}
+.pc-foot-link:hover{color:var(--green);text-decoration:underline;}
+
+/* Role switch: a quiet segmented pair, not the green primary buttons it
+   used to be — it must not outshout the page's own CTAs. */
+.pc-foot-roles-label{font-family:var(--figure);font-size:9.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--faint);}
+.pc-foot-roles{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;flex:none;}
+.pc-foot-role{font:inherit;font-family:var(--figure);font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.02em;border:0;background:var(--card);color:var(--muted);padding:4px 10px;cursor:pointer;
+  line-height:1.4;transition:background .12s ease,color .12s ease;}
+.pc-foot-role + .pc-foot-role{border-left:1px solid var(--line);}
+.pc-foot-role:hover{background:var(--gauge);color:#222222;}
+.pc-foot-role.on{background:var(--green-wash);color:var(--green-deep);}
+.pc-foot-role:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+
+/* In-product frame: brand bar → tabs → context bar full-width, then rail|content */
+.pcframe .pstrip{position:static;}
+/* Desktop only — at ≤980px the rail must stay the fixed slide-over drawer
+   (this later, higher-specificity rule would otherwise beat the media
+   query's position:fixed and break the drawer). */
+@media (min-width:981px){
+  .pcframe .rail{position:static;height:auto;min-height:560px;}
+}
+.pcframe .rail .nameplate,.pcframe .rail .rail-foot{display:none;}
+.pcframe .rail .navsec{padding-top:8px;}
+
+/* Hub, current-mockup chrome */
+.hub.curr{display:block;padding:0;background:#fff;min-height:100vh;}
+.hub-body{max-width:1160px;margin:0 auto;padding:20px 22px 46px;}
+.hub-h{font-family:var(--figure);font-size:18px;font-weight:700;color:#222;margin:2px 0 3px;}
+.hub-sub{color:var(--muted);margin-bottom:16px;font-size:11.5px;}
+h2.sec{font-family:var(--figure);font-size:15px;font-weight:700;color:#2b2b2b;margin:20px 0 9px;padding-bottom:5px;border-bottom:3px solid var(--lime);}
+.hub.curr .hub-metrics{margin-top:4px;}
+.hub.curr .hub-combined{margin-top:12px;}
+
+/* Hub tiles (mockup .tile grammar) */
+.hub.curr .hub-tile{border:1px solid var(--line);border-bottom:4px solid var(--lime);border-radius:0;padding:0;
+  display:flex;flex-direction:column;background:#fff;}
+.tile-h{background:var(--gauge);border-bottom:1px solid var(--line);padding:9px 12px;
+  font-family:var(--figure);font-weight:700;font-size:13px;color:#2b2b2b;}
+.tile-b{padding:12px;display:flex;flex-direction:column;gap:10px;flex:1;}
+.tile-desc{color:#555;min-height:28px;font-size:11px;}
+.hub.curr .hub-tile .btn{align-self:flex-start;margin-top:auto;}
+.hub.curr .hub-tile-metric .v{font-size:20px;color:var(--green-deep);}
+.hub.curr .hub-tile-delta{position:static;margin-left:auto;font-size:11px;}
+
+/* Stat boxes (mockup .stat grammar): grey box, lime bottom edge, green figure */
+.hub-stat{background:var(--gauge);border:1px solid var(--line);border-top:1px solid var(--line);
+  border-bottom:4px solid var(--lime);border-radius:0;}
+.hub-stat .v{color:var(--green-deep);}
+.jtbd .card{border-bottom:4px solid var(--lime);border-radius:0;}
+.card .big{color:var(--green-deep);}
+
+/* Section labels: lime underline replaces the hairline rule */
+.sectlab{border-bottom:3px solid var(--lime);padding-bottom:5px;}
+.sectlab .rule{display:none;}
+.sectlab h2{font-size:15px;}
+
+/* Tables: solid grey header band, white uppercase text (mockup table.dt) */
+.lgc-grid th,.tablewrap th{background:var(--muted);color:#fff;font-weight:400;text-transform:uppercase;
+  letter-spacing:.03em;border-bottom:1px solid var(--line);}
+.lgc-grid th .sort{color:#ddd;}
+.lgc-grid tbody tr:hover,.tablewrap tbody tr:hover td{background:#F0F7EC;}
+
+@media (max-width:980px){
+  .hub-body{padding:16px 14px 30px;}
+  .hub.curr .hub-tile{display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:0;min-width:0;}
+  .pc-top-right a{display:none;}
+}
+
+/* =====================================================================
+   FlexiQuote × PartsCheck — native integration inside the estimate.
+   Reuses the lgc table grammar; adds tabs, offer cards, type badges.
+   ===================================================================== */
+.fq-tabs{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);margin-bottom:0;}
+.fq-tab{border:1px solid transparent;border-bottom:none;background:transparent;color:#555;cursor:pointer;
+  font-family:var(--figure);font-size:11px;padding:8px 16px;border-radius:3px 3px 0 0;}
+.fq-tab.on{background:var(--card);border-color:var(--line);color:var(--green);font-weight:700;
+  border-top:3px solid var(--green);padding-top:6px;margin-bottom:-1px;}
+.fq-tab:disabled{color:#aaa;cursor:default;}
+.fq-pcbadge{margin-left:auto;font-size:10px;font-weight:700;color:var(--green-deep);
+  background:var(--green-wash);border:1px solid var(--green);border-radius:2px;padding:3px 9px;}
+.fq-link{border:none;background:none;padding:0;margin-left:6px;font-family:var(--sans);font-size:10.5px;
+  color:var(--green-deep);font-weight:700;cursor:pointer;text-decoration:underline;}
+.fq-best{font-weight:700;color:#2b2b2b;margin-left:4px;}
+.fq-save{color:var(--good);font-weight:700;}
+.fq-type{display:inline-block;font-family:var(--figure);font-size:9px;font-weight:700;border-radius:2px;padding:1px 6px;}
+.fq-type.oem{color:var(--green-deep);background:var(--green-wash);border:1px solid var(--good);}
+.fq-type.am{color:#555;background:var(--gauge);border:1px solid var(--line);}
+.fq-type.used{color:var(--warn);background:var(--warn-wash);border:1px solid var(--warn);}
+.fq-row.s-quoting td{background:#FFFBF2;}
+.fq-row.s-ordered td{background:#F6FBF4;}
+.fq-offers td{background:#FAFAFA;padding:10px;}
+.fq-offergrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;}
+.fq-offer{background:#fff;border:1px solid var(--line);border-radius:3px;padding:9px 11px;
+  display:flex;flex-direction:column;gap:5px;align-items:flex-start;}
+.fq-offer.sel{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);}
+.fq-offer b{font-family:var(--figure);font-size:11.5px;color:#2b2b2b;}
+.fq-offer .fq-price{font-family:var(--figure);font-size:14px;font-weight:700;color:#2b2b2b;}
+.fq-offer .btn{margin-top:3px;}
+.cbox.off{background:#fff;}
+.cbox.done{background:var(--gauge);border-color:var(--line);color:var(--muted);}
+@media (max-width:980px){ .fq-pcbadge{display:none;} }
+
+/* Grid items must be allowed to shrink so wide tables scroll inside their
+   own wrapper instead of overflowing the page. */
+.crev>div{min-width:0;}
+
+/* =====================================================================
+   FlexiQuote — light departure board (Kanban). Current kit: boxy columns
+   with grey headers, white cards, lime accents. Deliberate colour: red =
+   blocked only (parts hold), amber = stalled in stage, green = ready;
+   everything else neutral.
+   ===================================================================== */
+/* ---- FlexiQuote light departure board (kanban + the FlexiShop flow of work) ----
+   Kanban columns per Dave's 3 Jun demo ("just drag them"); statuses carry
+   the real workflow: booked cards dimmed until arrival (onsite:false),
+   red = parts hold / overdue, green = ready; rejected moves explain the
+   gate in .fqb-msg; the Book-in bar creates jobs from estimates. */
+.fqb-wrap{overflow-x:auto;padding-bottom:8px;}
+.fqb{display:flex;gap:10px;align-items:flex-start;min-width:max-content;}
+.fqb-col{width:218px;flex:none;background:#F7F7F7;border:1px solid var(--line);border-radius:3px;}
+.fqb-col.dragover{background:var(--green-wash);border-color:var(--green);}
+.fqb-colh{display:flex;align-items:center;gap:7px;padding:8px 11px;background:var(--gauge);
+  border-bottom:1px solid var(--line);font-family:var(--figure);font-size:10px;font-weight:700;text-transform:uppercase;color:#444;}
+.fqb-colh .ct{margin-left:auto;font-size:9.5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:0 6px;}
+.fqb-cards{padding:8px;display:flex;flex-direction:column;gap:8px;min-height:60px;}
+.fqb-card{background:#fff;border:1px solid var(--line);border-left:3px solid var(--line);border-radius:3px;
+  padding:9px 10px;cursor:grab;}
+.fqb-card:active{cursor:grabbing;}
+.fqb-card.dragging{opacity:.4;}
+.fqb-card:hover{border-color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.10);}
+.fqb-card.hold{border-left-color:var(--bad);}
+.fqb-card.late{border-left-color:var(--bad);}
+.fqb-card.ready{border-left-color:var(--good);}
+.fqb-card.offsite{opacity:.6;}
+.fqb-card.gone{opacity:.65;}
+.fqb-plate{font-family:var(--figure);font-size:12px;font-weight:700;color:#2b2b2b;display:flex;align-items:center;gap:6px;}
+.fqb-plate .est{margin-left:auto;font-size:9px;font-weight:700;color:var(--green-deep);}
+.fqb-veh{font-size:10px;color:var(--muted);margin:2px 0 6px;}
+.fqb-chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.fqb-chip{font-size:9px;font-weight:700;border-radius:2px;padding:1px 6px;background:var(--gauge);
+  border:1px solid var(--line);color:#555;}
+.fqb-chip.bad{background:var(--bad-wash);border-color:var(--bad);color:var(--bad);}
+.fqb-chip.warn{background:var(--warn-wash);border-color:var(--warn);color:var(--warn);}
+.fqb-chip.ok{background:var(--green-wash);border-color:var(--good);color:var(--good);}
+.fqb-partsbtn{border:none;background:none;padding:0;cursor:pointer;}
+.fqb-note{font-size:9px;color:#777;margin-top:4px;}
+.fqb-move{display:flex;gap:4px;margin-top:7px;}
+.fqb-move button{flex:1;border:1px solid var(--line);background:#fff;border-radius:2px;height:20px;
+  font-size:10px;color:#555;cursor:pointer;}
+.fqb-move button:hover{border-color:var(--green);color:var(--green-deep);}
+.fqb-move button:disabled{opacity:.35;cursor:default;}
+.fqb-msg{margin:10px 0 0;padding:7px 11px;background:var(--warn-wash);border:1px solid var(--warn);
+  border-radius:3px;font-size:10.5px;color:var(--warn);}
+.fqb-bookbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:8px 11px;
+  background:#fff;border:1px dashed var(--line);border-radius:3px;font-size:10.5px;color:#555;}
+.fqb-bookitem{display:inline-flex;align-items:center;gap:6px;background:#FAFAFA;border:1px solid var(--line);
+  border-radius:3px;padding:4px 6px;}
+.fqb-legend{display:flex;gap:14px;align-items:center;margin:10px 0 0;font-size:10px;color:var(--muted);flex-wrap:wrap;}
+.fqb-legend .k{display:inline-flex;align-items:center;gap:5px;}
+.fqb-legend .sw{width:10px;height:10px;border-radius:2px;border:1px solid var(--line);border-left:3px solid var(--line);background:#fff;}
+.fqb-legend .sw.hold{border-left-color:var(--bad);}
+.fqb-legend .sw.ready{border-left-color:var(--good);}
+
+/* ---- Supplier orders v2 pilot: accordion buckets + due pills ---- */
+.lgc-grid th.c,.lgc-grid td.c{text-align:center;}
+.lgc-accrow{cursor:pointer;}
+.lgc-accrow td{padding:9px 10px;border-bottom:1px solid var(--line);background:#fff;}
+.lgc-accrow.alt td{background:#F7F7F7;}
+.lgc-accrow:hover td{background:var(--green-wash);}
+.lgc-accrow b{font-family:var(--figure);font-size:11.5px;color:#2b2b2b;}
+.lgc-chev{color:var(--green-deep);font-size:10px;}
+.lgc-pillbtn{min-width:26px;border:none;border-radius:10px;padding:2px 8px;font-family:var(--figure);
+  font-size:10px;font-weight:700;color:#fff;cursor:pointer;}
+.lgc-pillbtn.red{background:var(--bad);}
+.lgc-pillbtn.orange{background:var(--warn);}
+.lgc-pillbtn.green{background:var(--good);}
+.lgc-pillbtn.zero{background:#fff;color:#bbb;border:1px solid var(--line);cursor:default;}
+.lgc-pillbtn.sel{box-shadow:0 0 0 2px #2b2b2b;}
+.lgc-accbody>td{padding:0 0 12px;background:#FCFCFC;border-bottom:1px solid var(--line);}
+.lgc-inner{width:100%;border-collapse:collapse;}
+.lgc-inner th{background:var(--gauge);color:#444;font-family:var(--figure);font-size:10px;font-weight:700;
+  text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.lgc-inner td{padding:7px 10px;border-bottom:1px solid var(--gauge);font-size:11px;vertical-align:middle;}
+.lgc-r-overdue td{background:#FBE9E6;}
+.lgc-r-today td{background:#FDF3E4;}
+.lgc-r-week td{background:#F4FAF1;}
+.lgc-r-later td{background:#fff;}
+.lgc-empty{text-align:center;padding:18px!important;color:#888;background:#F5F5DC;font-size:11px;}
+
+/* ---- Consumables shopping run · step 2 = the PartsCheck price grid ----
+   Mirrors appV2 price-grid: parts as rows x suppliers as columns; the
+   selected cell carries the green inset box-shadow of the real grid's
+   .gridSelected; empty cells grey like .noPrice; totals along the bottom. */
+.cgrid-wrap{background:var(--card);border:1px solid var(--line);border-top:none;overflow-x:auto;}
+.cgrid{width:100%;border-collapse:collapse;min-width:880px;}
+.cgrid th,.cgrid td{border:1px solid var(--line);vertical-align:top;}
+.cgrid thead th{background:var(--gauge);color:#444;font-family:var(--figure);font-size:10.5px;text-align:left;padding:8px 10px;}
+.cgrid thead th.cg-sup{border-top:3px solid var(--green);min-width:128px;}
+.cgrid thead th.cg-sup[role="button"]{cursor:pointer;}
+.cgrid thead th.cg-sup[role="button"]:hover{background:#E4F2E7;}
+.cgrid thead th.cg-sup.noacct{border-top-color:#BBB;color:#888;}
+.cg-supname{font-size:11.5px;font-weight:700;text-transform:uppercase;}
+.cg-supsub{font-weight:400;font-size:9.5px;color:#777;margin-top:2px;text-transform:none;}
+.cg-qty{width:56px;text-align:center;}
+td.cg-qty{padding:8px 6px;vertical-align:middle;}
+.cg-qtyinput{width:46px;padding:4px 2px;border:1px solid var(--line);border-radius:3px;text-align:center;font-size:11px;}
+.cg-parthead,.cg-part{min-width:185px;}
+td.cg-part{padding:8px 10px;background:#FCFCFC;}
+.cg-part .line1{font-size:11px;}
+.cg-part .line2{font-size:9.5px;color:#777;margin-top:2px;}
+.cg-part .line3{font-size:9.5px;color:var(--warn);margin-top:2px;}
+/* Consumables-only 4th line: what a lock costs against the best open price.
+   Ink/muted, never red — the lock may still be the right commercial call,
+   the reader just has to be able to see the price of it. */
+.cg-part .line4{font-size:9.5px;color:var(--muted);margin-top:2px;}
+/* A marked type nobody the shop banks with sells: an explicit dead end with
+   a way out, instead of a permanently disabled "Review order". */
+.cg-blocked{font-size:9.5px;color:var(--bad);margin-top:5px;}
+.cg-blocked .btn{display:block;margin-top:5px;padding:3px 8px;font-size:9.5px;}
+/* Optional-part row (35th pass): a compact "Optional Part" label with a
+   green add/expand arrow, no dealer#/list — mirrors production's
+   alternative-part rows. */
+.cg-part-opt .line1{color:var(--muted);}
+.cg-optbadge{display:inline-block;width:13px;height:13px;line-height:13px;text-align:center;
+  border-radius:50%;background:var(--green);color:#fff;font-size:8px;vertical-align:middle;margin-right:3px;}
+.cg-cell{padding:8px 10px;font-size:10px;}
+.cg-cell.clickable{cursor:pointer;}
+.cg-cell.clickable:hover{background:#F0F7EC;}
+.cg-cell.clickable:focus-visible{outline:2px solid var(--green);outline-offset:-2px;}
+.cg-cell.sel{box-shadow:inset 0 0 0 3px var(--green);background:var(--green-wash);}
+.cg-cell.sel .cg-cost{color:var(--green-deep);}
+.cg-cell.noacct{background:#F5F5F5;}
+.cg-cell.noacct .cg-cost,.cg-cell.noacct .cg-type,.cg-cell.noacct .cg-unit{color:#999;}
+.cg-cell.lockedout{background:#F5F5F5;opacity:.45;}
+.cg-cell.nooffer{background:#F2F2F2;color:#BBB;text-align:center;vertical-align:middle;}
+.cg-cost{font-family:var(--figure);font-size:13px;font-weight:700;color:#2b2b2b;}
+.cg-type{margin-top:2px;color:#555;}
+.cg-unit{margin-top:2px;color:#777;font-size:9.5px;}
+/* No per-cell "Selected" mark on ANY grid (Aju 21 Jul, reaffirmed 28 Jul):
+   selection is carried by the green inset + the price's weight/colour.
+   The old .cg-selmark rule is retired. */
+.cg-totalrow td{background:var(--gauge);padding:8px 10px;}
+.cg-total{text-align:right;font-weight:700;font-size:10.5px;color:#444;vertical-align:middle;}
+.cg-totval{font-size:11px;}
+/* ---- Consumables-only extensions to the shared grid (never restyle the
+   .cgrid base itself; these are additive, scoped classes) ---- */
+/* The grid compares $/unit but the shop pays delivered — each supplier
+   total carries its own basket freight so the comparison is honest at the
+   point the reader makes it, not two steps later at review. */
+.cg-frt{font-size:9px;color:var(--muted);margin-top:3px;font-weight:400;}
+/* A line with no price yet is the only thing standing between the run and
+   the review step — give it a findable edge. */
+.cg-row.unpicked>td:first-child{border-left:3px solid var(--warn);}
+.cg-row.blocked>td:first-child{border-left:3px solid var(--bad);}
+.cg-toolbar{border-top:1px solid var(--line);}
+.cg-alert{margin:0 0 -1px;border-radius:3px 3px 0 0;}
+.cg-jump{padding:4px 10px;font-size:10px;}
+/* Orders row: the whole row opens its receiving checklist. */
+.cord{cursor:pointer;}
+
+/* ---- PartsCheck quote screen + price grid (17 Jul redesign) ----
+   Dense top strip; user-selectable columns (default 7); Adjust = a
+   floating panel PINNED AT THE CELL (no centered modal, no hover
+   timeout); supplier-type accents mirror the production price grid. */
+.qg-top{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--card);
+  border:1px solid var(--line);border-bottom:none;padding:8px 12px;font-size:11px;}
+.qg-dim{color:#777;font-size:10px;}
+.qg-spacer{flex:1;}
+.qg-fig{display:inline-flex;align-items:baseline;gap:5px;}
+.qg-kv{color:#777;font-size:9px;text-transform:uppercase;}
+.qg-fig .num{font-size:12.5px;}
+.qg-margin{color:var(--green-deep);}
+/* A loss is not a profit — ink, not green (Aju 29 Jul). */
+.qg-margin.neg{color:var(--ink);}
+/* The per-card ▼% dealer-gap tag (.qg-oemgap) is retired (Aju 3 Aug: "I do
+   not want to see the difference to dealer pricing for profit on each
+   card") — the dealer comparison renders only on the detailed header's
+   summary, as .qg-card-gap. No % rides beside a card profit at all. */
+/* 29th pass: shrunk 9→8px alongside the cost/profit size bump above,
+   so the price figures read as the dominant text on the card and the
+   type label recedes to a secondary cue (colour + position still
+   carry it). */
+.qg-type{font-weight:700;font-size:8px;text-transform:uppercase;}
+.qg-more{background:var(--gauge);}
+.qg-morecell{font-size:12px;}
+
+/* Quote header cards (33rd pass — rebuilt on PARTSCHECK'S OWN SIDEBAR:
+   Dealer Profit, Selected Profit, Job Saving, per price-grid-view.php's
+   getPriceMatrixCalculation()/startProfitCalculator() — superseding the
+   21st-pass "Your cost/sell/profit" invented framing and its per-card
+   colour-pairing scheme, which paired against THAT trio specifically
+   and no longer applies). Mockup stat-box idiom retained: grey box,
+   lime bottom edge. Production's own two warn STATES are still marked in
+   the DOM via `.qg-card-warn` — Selected Profit when the dealer would have
+   earned more, Job Saving when it goes negative (price-grid-view.php:
+   5900-5913) — but they no longer paint the figure red; see the colour
+   rule immediately below. */
+.qg-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0;}
+/* White card background (Aju), not the grey stat-box wash — the bottom
+   accent bar still carries a colour, via --accent when a card sets one
+   (falling back to --brass, the design system's existing grey-rule token,
+   for cards that don't — e.g. Your cost/sell and Job saving — Aju).
+   --lime remains the shared token used elsewhere; only THIS fallback
+   moves off it. */
+.qg-card{background:#fff;border:1px solid var(--line);border-bottom:4px solid var(--accent, var(--brass));padding:10px 14px;position:relative;cursor:help;}
+.qg-card-l{font-size:9.5px;text-transform:uppercase;color:#666;font-weight:700;letter-spacing:.03em;}
+/* NUMBERS ARE INK; ONLY PROFIT IS GREEN (Aju 29 Jul: "All numbers should be
+   grey or black, unless profit. Profit should be shown as green.")
+   Written as an OPT-IN, not an opt-out: a header figure is ink, and a card
+   marks itself .qg-card-profit to earn the green. Green-by-default was how
+   Job Saving — a saving, not a profit — ended up the same colour as the
+   profit beside it, and it is how the next card added here would too.
+   The .qg-card-warn red is retired with it: Selected Profit under the
+   dealer's is still profit (green), and a negative Job Saving is still not
+   (ink). The class is still emitted, so the state stays addressable. */
+.qg-card-v{font-family:var(--figure);font-size:22px;font-weight:700;margin:2px 0 3px;color:var(--ink);}
+.qg-card-profit .qg-card-v{color:var(--green-deep);}
+/* A LOSS IS NOT PROFIT, so it does not inherit the green — a green
+   -$7,450.01 would make the colour mean nothing at all. */
+.qg-card-profit .qg-card-v.neg{color:var(--ink);}
+/* RED WHEN THE SELECTION IS NOT THE BEST-EARNING ONE (Aju 29 Jul). The one
+   sanctioned exception to "no number is red": this figure is the reader's
+   own result, and red says money was left on the table. Last in the cascade
+   so it beats both the green and the .neg ink — a loss that is ALSO behind
+   the best available is still, first, behind the best available.
+   Scoped to .qg-card-profit: Job Saving carries .qg-card-warn too, as a
+   marker for its own negative state, and must stay ink. */
+.qg-card-profit .qg-card-v.qg-card-warn{color:var(--bad);}
+/* Classic header's Profit card only (Aju): colour now follows the DEALER
+   comparison (updateTotals()'s pdiff), not the profit/loss or OEM-gap
+   rules above — green at or ahead of what the dealer would have earned on
+   the same lines, amber when behind. Same specificity as the rules above
+   (3 classes); declared last so it wins the tie regardless of source
+   order, superseding them for any card that carries .sv. */
+.qg-card-v.sv.grn{color:#0FA83E;}
+.qg-card-v.sv.amb{color:#F7941D;}
+/* The gap tag rides in the headline rather than the sub-line, because the
+   'detailed-plain' header drops sub-lines and a warning you only see in
+   some header modes is not a warning. Sized well below the figure: it
+   qualifies the number, it does not compete with it. */
+.qg-card-gap{display:inline-block;margin-left:7px;vertical-align:2px;
+  font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.02em;
+  color:var(--bad);background:var(--bad-wash);border-radius:9px;padding:1px 7px;
+  white-space:nowrap;}
+.qg-card-pct{font-size:13px;font-weight:700;color:#666;}
+.qg-card-sub{font-size:10px;color:#666;}
+.qg-card-sub .qg-kv{text-transform:none;font-size:10px;}
+/* Header-card "how it's worked out" hover explainer (Aju): each card reveals
+   a plain-language note on how its figure is calculated — most useful for the
+   headline-only detailed-plain header. The .qg-cards top strip isn't inside an
+   overflow container, so a plain absolute popover suffices (no fixed pos). */
+.qg-cardhelp{display:none;position:absolute;left:0;top:100%;margin-top:6px;z-index:50;width:280px;max-width:84vw;
+  background:#fff;border:2px solid var(--line);border-radius:3px;padding:10px 12px;
+  box-shadow:0 3px 10px rgba(0,0,0,.16);text-align:left;cursor:default;white-space:normal;}
+.qg-cards .qg-card:last-child .qg-cardhelp{left:auto;right:0;}
+.qg-card:hover .qg-cardhelp,.qg-card:focus .qg-cardhelp,.qg-card:focus-within .qg-cardhelp{display:block;}
+/* Reference tooltip grammar (Aju's attached file), used by the 4-card
+   cost/sell/profit/job-saving headers: a "What this is" line, the figures the
+   number derives from, then an italic footnote. Labels left, values right —
+   the values are what the reader came for. Rendered in design-system tokens
+   rather than the reference's own greys. */
+.qg-cardhelp-tip{width:260px;padding:10px 12px;}
+.qg-cardhelp-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  padding:4px 0;border-bottom:1px solid var(--gauge);}
+.qg-cardhelp-row:last-of-type{border-bottom:0;}
+.qg-cardhelp-l{font-size:10px;color:var(--muted);flex-shrink:0;}
+.qg-cardhelp-v{font-size:10px;color:#111;font-weight:700;text-align:right;}
+/* Coloured tint for a tooltip row value (Aju) — the "vs Dealer" caret
+   (Cost and Profit read opposite ways: cheaper cost is the win, so its
+   caret points down; more profit is the win, so its caret points up, so
+   the colour rides on the glyph itself, not on direction) and Customer
+   Saving's plain green "Saves" figure both use it. */
+.qg-cardhelp-tint.grn{color:#0FA83E;}
+.qg-cardhelp-tint.amb{color:#F7941D;}
+.qg-cardhelp-tint.red{color:var(--bad);}
+.qg-cardhelp-note{font-size:10px;color:var(--muted);font-style:italic;margin-top:7px;line-height:1.4;}
+.qg-cardhelp-h{font-family:var(--figure);font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+.qg-cardhelp-exp{font-size:11px;color:#333;line-height:1.5;}
+.qg-cardhelp-calc{margin-top:7px;padding-top:7px;border-top:1px dashed #ddd;font-family:var(--figure);font-size:11px;font-weight:700;color:var(--green-deep);line-height:1.5;}
+.qg-cards-hint{margin:-4px 0 8px;}
+/* Classic header (35th pass) — the earlier "Your cost / Your sell / Your
+   profit" version, kept for side-by-side comparison. Restores the old
+   per-card figure colours (cost = selected-cell black, sell = muted list
+   grey, profit = green). These classes are ONLY emitted in classic mode,
+   so they never touch the default sidebar header. */
+.qg-cards-classic{grid-template-columns:repeat(4,1fr);}
+/* Centred copy (Aju) — label and figure both, classic-family cards only;
+   the hover explainer keeps its own left-aligned text regardless. */
+.qg-cards-classic .qg-card{text-align:center;}
+.qg-cards-classic .qg-card-cost .qg-card-v{color:#1a1a1a;}
+/* Your sell matches Your cost / Job saving (Aju) — no longer the muted
+   list-grey it used to carry; only Profit gets its own colour now. */
+.qg-cards-classic .qg-card-sell .qg-card-v{color:#1a1a1a;}
+/* Profit's own colour comes from the .sv.grn/.sv.amb rules above (dealer
+   comparison), not the shared .qg-card-profit rule; Job saving borrows
+   neither — it is a saving, not a profit. */
+@media (max-width:700px){ .qg-cards{grid-template-columns:1fr;} }
+/* ETD / supply chips + flagged recon prices (reference-quote idiom):
+   Same Day green, 1-3 days blue, 3-5 days / weeks / EX amber, Flagged red */
+.qg-chiprow{display:flex;flex-wrap:wrap;gap:3px;}
+.qg-cell{position:relative;}
+/* ETD sits behind an exclamation icon, top-right of the cell — hover it */
+/* Uniform grid geometry (21 Jul): fixed table layout + an exact inline
+   px width (set in pc-quote.js, not min-width) pin every supplier cell
+   to the SAME width no matter how many columns are visible — the table
+   never stretches to fill a wider container. min-width:0 here cancels
+   .cgrid's 880px min-width, which would otherwise force extra width
+   onto a small-column-count quote and inflate its cell size. A fixed
+   row height makes every cell the same height too. Overflow scrolls
+   the .cgrid-wrap, not the page.*/
+.qgrid{table-layout:fixed;width:auto;min-width:0;}
+.qgrid .cg-qty{width:44px;}
+.qgrid .cg-parthead{width:206px;}
+.qgrid thead th.cg-sup{min-width:0;width:112px;padding:6px 6px;text-align:center;vertical-align:top;}
+/* Supplier header aligned to production (35th pass): a circular fa-user
+   icon in the supplier's type colour, above a centred name — mirrors the
+   real price-grid's `supplierIcon` roundel. */
+.qgrid .cg-supicon{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--green);
+  display:flex;align-items:center;justify-content:center;margin:1px auto 4px;box-sizing:border-box;}
+.qgrid .cg-supicon svg{display:block;}
+.qgrid .cg-supname{text-align:center;}
+/* "N/total  Selected" count row (green), aligned to production's own
+   selectionText header (scrolltable.css .selectionText, #12a532). */
+.qgrid thead th.cg-selcount{color:#12a532;font-weight:700;border-bottom:0;padding-bottom:0;vertical-align:bottom;}
+.qgrid thead th.cg-qty.cg-selcount{text-align:center;font-size:16px;}
+.qgrid thead th.cg-parthead.cg-selcount{font-size:13px;text-transform:uppercase;letter-spacing:.03em;}
+.qgrid .qg-more{width:64px;}
+.qgrid tbody td{height:62px;overflow:hidden;}
+/* Supplier name wraps at a smaller size (21 Jul, 4th pass) so a narrower
+   112px column (was 132px) still reads long names like "Toyota Parts
+   Sydney" in full instead of forcing a wider column. Scoped to .qgrid —
+   the consumables grid keeps its own supplier-name sizing. */
+.qgrid .cg-supname{font-size:8px;white-space:normal;overflow-wrap:break-word;line-height:1.15;}
+.qgrid .cg-supsub{font-size:8px;}
+/* Price weight/colour IS the selection signal (Aju 21 Jul: no "Selected"
+   text/tickbox — the price itself carries it): dark grey + regular
+   weight unselected, BLACK + bold once picked (Aju 21 Jul, second pass:
+   selected cost is bold+black, not green — the green wash/inset on the
+   cell is the colour cue). Scoped to .qgrid only — the consumables
+   price grid shares .cg-cost/.cg-cell and keeps its own styling.
+   Flagged stays red regardless of selection (a warning, not a
+   selection state) via the extra class for higher specificity. */
+/* 22nd pass (Aju's card mock): the cost is THE big number — bumped
+   12→13px; the profit attaches directly beneath it (margins below).
+   29th pass (Aju: "text on cards should be larger, part type text
+   should be smaller"): cost bumped again 13→15px; profit (scoped
+   below, was the shared 9.5px .cg-unit base) bumped to 10.5px — both
+   grow while staying clearly smaller than the cost, preserving "big
+   number, little number"; the type label shrinks in the same pass
+   (.qg-type below) so the price figures dominate the card. */
+/* 28 Jul (Aju: "Reduce the cell padding and increase the $ font sizes …
+   too much space above and below"): the money figures grow again —
+   cost 15→16px, profit 10.5→12px (below) — while the cell's vertical
+   padding drops 16→12px, so the card reads dense instead of airy. The
+   type label stays 8px; the cost is still clearly the big number.
+   16px, not 17: a widest-case sub-$10k cost ("$9,999.99", cents kept
+   below $10k) at 17px reached the enlarged corner-chip column in the
+   fixed 112px cell and tripped the chips-never-overlap-text invariant. */
+.qgrid .cg-cost{color:#555;font-weight:400;font-size:16px;}
+.qgrid .cg-unit{font-size:12px;}
+/* 31st pass (Aju: "Reduce the stroke for the selection state. It is
+   too thick.") — the shared `.cg-cell.sel` rule (consumables' own,
+   untouched) uses a 3px inset box-shadow; on this grid's smaller
+   112x64 card that read as heavy. Scoped override thins it to 2px. */
+.qgrid .cg-cell.sel{box-shadow:inset 0 0 0 2px var(--green);}
+.qgrid .cg-cell.sel .cg-cost{color:#1a1a1a;font-weight:700;}
+/* A FLAGGED PRICE IS STILL A PRICE, so it is grey/black like every other
+   number (Aju 29 Jul). The red it used to take is retired: a cost figure is
+   not a profit, and it was the last colour on the grid competing with the
+   one green that now means something. The .qg-flagprice class is still
+   emitted — the state stays addressable, and the offers that carry it also
+   carry a supplier comment, which the chip vocabulary already surfaces. */
+.qgrid .cg-cell .cg-cost.qg-flagprice{font-weight:400;}
+.qgrid .cg-cell.sel .cg-cost.qg-flagprice{color:#1a1a1a;font-weight:700;}
+
+/* ---- Legend lens: dimmed cards (29 Jul) ---------------------------------
+   The legend filter no longer removes rows — it keeps the cards carrying
+   the chip in full colour and steps everything else back to grey (Aju).
+   Every line stays on screen, so a lit card is read against its own row's
+   alternatives rather than against a shortened list.
+   Deliberately GREY, not faded to near-nothing: these cards are still
+   readable, still hoverable and still clickable. The lens answers "which
+   ones have this" without taking the rest of the quote away. Placed after
+   the .sel rules above so it wins on colour by source order — but the
+   selection ring and the Modify bar are NOT dimmed: what you have picked
+   must stay unambiguous whatever lens is on. */
+.qgrid .cg-cell.dim .cg-type .qg-type,
+.qgrid .cg-cell.dim .cg-cost,
+.qgrid .cg-cell.dim .cg-unit,
+.qgrid .cg-cell.dim .cg-unit .qg-margin{color:#A0A0A0;}
+.qgrid .cg-cell.dim.sel .cg-cost{color:#8A8A8A;}
+.qgrid .cg-cell.dim .qg-chips{filter:grayscale(1);opacity:.4;}
+/* The Modify bar greys with the rest of the card. It is an ACTION, not
+   state — leaving six full-strength green bars on dimmed cards made them
+   the loudest thing on a greyed grid, pulling the eye away from the cards
+   the lens is meant to be pointing at. The selection RING keeps its green:
+   what you have picked is state, and must stay unambiguous. */
+.qgrid .cg-cell.dim .qg-modifybtn{background:#B4B4B4;}
+.qgrid .cg-cell.dim .qg-modifybtn:hover{background:var(--green);}
+/* The hover panel is never dimmed — hovering a card is a request to read
+   it, and answering that in grey would be perverse. */
+.qgrid .cg-cell.dim .qg-hoverpanel{filter:none;opacity:1;}
+/* List price (per line, in the part-description column) matches Your
+   sell's muted tone (21 Jul) — was amber, which reads as a warning and
+   doesn't apply to a plain list-price figure. Scoped to .qgrid: the
+   consumables screen reuses .cg-part .line3 for its "Locked" note,
+   where amber is the correct, intentional colour — left untouched. */
+.qgrid .cg-part .line3{color:var(--muted);}
+
+/* Cell text centred (21 Jul): buy price / type / profit sit on the same
+   centred axis down every column, so the eye can compare straight down
+   a column instead of tracking a ragged left edge. Scoped to .qgrid. */
+.qgrid .cg-cell{text-align:center;}
+
+/* Profit is green on EVERY card (Aju: "the colour of profit changing is too
+   hard to understand. Make it all green again"). A best-only highlight was
+   tried and reverted: making the reader work out why one figure differed
+   cost more than the emphasis gained. Green here just means "this is the
+   profit" — it is not a ranking.
+   Regular weight, not bold (Aju): the markup uses <b>, which the browser's
+   own stylesheet renders bold. The COST is the card's big number and the
+   only figure that earns weight — the profit is its quiet companion, so it
+   keeps the green and gives up the bold. */
+.qgrid .cg-unit.qg-profit .qg-margin{font-weight:400;}
+
+/* Content is CENTRED in the card (Aju: "the bottom of the card still has too
+   much padding compared to the top. Center the content more").
+   The culprit was the in-flow Modify spacer: equalising the padding alone
+   couldn't work, because the spacer sat inside the content flow and pooled
+   its dead space at the bottom (measured 7.5px above the content vs 20.5px
+   below). The spacer is now zero-height and the BOTTOM PADDING hosts the
+   Modify bar instead — the bar is absolutely positioned, so it costs the
+   flow nothing and the padding can stay symmetric. Result: an exact 1.00
+   top:bottom ratio, with the bar sitting inside the bottom band, 1px clear
+   of the profit line. */
+/* 28 Jul: 16→12px vertical. Still symmetric (the centred-content rule
+   holds); the Modify bar shrinks with it (below) so it keeps living
+   inside the bottom padding band without touching the profit line. */
+.qgrid .cg-cell{padding:12px 6px;}
+
+/* Modify (21 Jul, revised): a fixed slot at the BOTTOM of every price
+   cell — reserved (empty) on unselected cells so price/type/profit sit
+   at the same vertical position everywhere, occupied by a solid GREEN
+   pill with a calculator icon (production grid's Modify affordance) on
+   a selected cell. Editing swaps it for a Done pill in the same slot;
+   the cost line above becomes a plain input, no button attached to it.
+   Table cells don't honour overflow:hidden as a hard cap the way normal
+   blocks do (a `<td>`'s CSS height is a floor, not a ceiling — content
+   that doesn't fit grows the row instead of clipping), so adding this
+   4th line meant the 76px row was actually growing to ~87px. Tightened
+   line-height on the existing three lines (scoped to .qgrid so the
+   consumables grid, which shares these classes, is unaffected) claws
+   back the room instead, keeping every row a true fixed 76px. */
+.qgrid .cg-cost,.qgrid .cg-type,.qgrid .cg-unit{line-height:1.15;}
+/* Card line order (22nd pass): TYPE sits on top, COST below it, and
+   the PROFIT attaches DIRECTLY beneath the cost — zero gap between the
+   big number and its little number, so they read as one pair. */
+.qgrid .cg-type{margin-top:0;}
+.qgrid .cg-cost{margin-top:1px;}
+.qgrid .cg-unit{margin-top:0;}
+/* Reserved in-flow spacer so the price/type/profit never shift between
+   selected and unselected cells; the actual Modify BAR is positioned
+   absolutely against the cell's bottom edge (below). */
+/* Zero-height: the Modify bar's room now comes from the cell's symmetric
+   bottom padding (see .qgrid .cg-cell above), not from an in-flow spacer
+   that pushed the card's content off-centre. Kept as an element so the
+   markup and its invariants stay stable. */
+.qg-modifyslot{margin-top:0;height:0;}
+/* Modify bar = production's gridModify: a full-width green UPPERCASE bar
+   flush against the BOTTOM of the cell, with a calculator icon. */
+.qg-modifybtn,.qg-modifydone{position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  height:11px;line-height:11px;border:none;border-radius:0;cursor:pointer;
+  background:var(--green);color:#fff;font-size:8.5px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;padding:0;}
+.qg-modifybtn .qg-modicon{flex:0 0 auto;}
+.qg-modifybtn:hover,.qg-modifydone:hover{background:var(--green-deep);}
+.qg-costinput{width:46px;height:13px;box-sizing:border-box;font-family:var(--figure);font-size:11px;
+  font-weight:700;text-align:center;border:1px solid var(--green);border-radius:2px;padding:0 1px;
+  color:#1a1a1a;background:#fff;line-height:11px;}
+/* Signal chips (21 Jul, 13th pass — Option 1 from the mockup page,
+   replacing the corner triangles). ONE small square chip per signal,
+   nothing merges or hides: flame (green OEM / purple aftermarket) =
+   part-number match, ANCHORED AT THE CORNER; speech-bubble (blue) =
+   supplier comment, to its left; clock (amber) = long ETD (>5 days /
+   EX), to the left of that. Flagged is not a chip — the red price
+   carries it. Chips are absolutely positioned in the top-right and must
+   NEVER overlap the centred cell text (Aju's explicit requirement) — a
+   selfcheck asserts zero geometric intersection between the chip row
+   and every text line's rendered extent. Icons are single-colour SVGs
+   (12th pass): flame filled, bubble/clock outline strokes — filled
+   shapes this small collapse into blobs. */
+/* Solid colour-coded chips (27th pass, Aju — inverting the 17th-pass
+   transparent-glyph experiment back): every chip is a UNIFORM TILE —
+   identical 10px slots (14px in the hover panel), white glyph ink
+   scaled to the same height and centred in the box — and the TILE's
+   background carries the colour: GREY = comment · ORANGE = comment
+   with long ETD/EX · GREEN = genuine (OEM or Parallel) part-number
+   match · PURPLE = aftermarket match · BLUE = donor star (production's
+   donor-badge #007bff). GREEN IS PRODUCTION'S OWN EXACT VALUE (32nd
+   pass — verified against scrolltable.css's `.gridNotifySamePartNo`):
+   #13a538, not this app's brand green (#0FA83E) — production draws no
+   distinction between a dealer's own genuine match and another genuine
+   supplier's (that split, and its blue tier, was a 30th-pass invention,
+   now superseded/removed). Pinned at the cell's top-right corner, 2px
+   inset, 2px between chips. Max two chips ever (info bubble +
+   star-or-flame); the no-overlap invariant still verifies chips never
+   touch the text. */
+.qg-chips{position:absolute;top:2px;right:2px;display:flex;gap:2px;}
+/* Chip tile. 12px (up from 10px) so the glyph and its keyline both have
+   room — these are read at a glance across a dense grid, so legibility
+   wins over shaving 2px.
+   The stroke is INSET (Aju: "the size should be inclusive of the stroke").
+   As an outer ring it painted 1px beyond the box on every side, so a
+   strongly-stroked grey tile measured the same as the flame but READ 2px
+   wider — which is exactly why the "!" and clock looked oversized next to
+   it. Inset, the painted extent equals the tile size for every chip,
+   whatever weight its stroke carries. */
+.qg-chip{width:12px;height:12px;border-radius:2px;display:inline-flex;align-items:center;
+  justify-content:center;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
+.qg-chip.lg{width:14px;height:14px;border-radius:3px;}
+/* Vertical stack (the "Chips vert" variants): the decision chip sits at the
+   top — that end is "the corner" when the row runs downward. */
+.qg-chips.vert{flex-direction:column;}
+/* Collapsed informational chip: one quiet tile standing in for the comment
+   bubble, so the coloured decision chips carry the eye.
+   The stroke here is LUMINANCE-KEYED, not uniform (design review): the
+   saturated tiles above already clear 3:1 against a white cell unaided, so
+   their keyline is barely-there — but a pale tile is invisible without a
+   real boundary, so it gets a solid #8A8A8A edge (3.45:1, already in the
+   palette) and the amber variant gets --warn. Fixes a WCAG 1.4.11 gap the
+   uniform rgba() ring left behind. */
+.qg-chip.excl{background:#EDEFF2;color:#4B5563;font-family:var(--figure);font-weight:800;
+  font-size:9px;line-height:1;box-shadow:inset 0 0 0 1px #8A8A8A;}
+/* No amber variant: the "!" reads the same whether a comment or a slow ETA
+   raised it (Aju). It's a neutral "there's more to read" marker, and the
+   hover panel is where the reason is named — its ETD row carries the ETA's
+   own clock chip. Keeping the tile uncoloured also stops it competing with
+   the decision chips it sits beside. */
+/* Enlarged chip group (Aju) — used by 'col-excl'. The scale-up applies to
+   the whole GROUP, not just the flame, so the flame and the "!" beside it
+   measure identically, stroke included (both carry the same 1px outer ring,
+   which costs no layout space). 18px against the standard 12px is a
+   deliberate 3:2 step: review noted an in-between ratio reads as a
+   rendering fault rather than an intent. */
+.qg-chips.xl .qg-chip{width:16px;height:16px;border-radius:3px;}
+/* The "!" is set a little smaller than the tile would allow, to sit at the
+   same optical weight as the flame: FA4.7's flame is a narrow glyph (ink
+   aspect 0.583), so a square-ish "!" or clock matched to it by height reads
+   heavier. Balanced by ink, not by box. */
+.qg-chips.xl .qg-chip.excl{font-size:11px;}
+.qg-svgicon{display:block;}
+.qg-chip.comment{background:#8A8A8A;}
+.qg-chip.comment.warn{background:#E07B00;}
+/* ONE flame, always production's green #13A538, for every part-number match
+   — genuine, parallel or aftermarket alike (Aju 29 Jul). The purple
+   aftermarket tier is retired: the flame answers "does this part number
+   match the dealer's", and that answer doesn't change with who is answering.
+   Purple still means aftermarket everywhere it belongs — the column type bar
+   and the card's type label — it just no longer doubles as a match colour. */
+.qg-chip.match{background:#13A538;}
+.qg-chip.donor{background:#007BFF;}
+/* Photo chip (views/check-price-grid.js, 14 Sep) — a signal pc-quote.js's
+   grid doesn't have yet: a card carries a photo, opened via the lightbox.
+   Teal keeps it clearly apart from match/donor/comment/eta. */
+.qg-chip.photo{background:#0891B2;}
+
+/* Shared hover panel (Aju 21 Jul, 11th pass — rebuilt on the REAL
+   production panel): hovering/focusing the whole price CARD reveals
+   this — the actual appV2 "morePrice" hover panel's own field set and
+   order (Part Nr / Sell Price / Mark-Up / Profit / Comments, each a
+   label:value row, mirroring its `suppInfoLong`/`suppInfoValueLong`
+   50/50 layout), shown for EVERY priced offer. The flame lives ON the
+   existing Part Nr row's value, the speech-bubble lives ON the existing
+   Comments row's value — no separate invented rows for either — and ETD
+   is the one genuinely NEW row (production has none), highlighted amber
+   when long (>5 days) or EX-sourced. `.qg-cell` normally clips overflow
+   to enforce the fixed 64px row height (21 Jul, 4th pass) — overridden
+   to visible only while hovered/focused so the panel isn't clipped by
+   that same rule; only the hovered cell's z-index rises, so it draws
+   over neighbours without disturbing anyone else's geometry. */
+.qgrid tbody td.qg-cell:hover,
+.qgrid tbody td.qg-cell:focus{overflow:visible;z-index:20;}
+/* POSITION:FIXED (41st-pass follow-up — Aju: "hover gets cut off at the
+   top. Review the actual table set up"): the panel was absolute inside
+   the cell, which is clipped by BOTH the cell's own overflow:hidden AND
+   `.cgrid-wrap`'s overflow:auto — so a flipped-up panel from a bottom row
+   ran off the top of the wrap and was cut. Fixed positioning escapes
+   every overflow-clipping ancestor; a delegated handler
+   (pcqPositionPanel) sets its viewport top/left and caps its height — so
+   it's never clipped, in either direction. Safe here: no ancestor carries
+   a transform (which would re-anchor a fixed element).
+   DIRECTION (28 Jul — Aju: "the on-hover behaviour is quite obstructive.
+   It hides a lot of the content"): the panel opens ABOVE the cell, and
+   only drops below when the cell is too near the viewport top to fit one
+   above. Above never covers the hovered cell's own row, so a repairer can
+   scan straight across the suppliers on a line. */
+.qg-hoverpanel{display:none;position:fixed;z-index:1000;
+  background:#fff;border:2px solid var(--green);border-radius:3px;padding:7px 9px;
+  min-width:210px;max-width:260px;box-shadow:0 2px 6px rgba(0,0,0,.18);text-align:left;
+  cursor:default;overflow-y:auto;}
+.qgrid tbody td.qg-cell:hover .qg-hoverpanel,
+.qgrid tbody td.qg-cell:focus .qg-hoverpanel{display:block;}
+/* Supplier header info card (4 Aug — per Mat's margin-rules prototype):
+   the same panel chrome on the column header, showing supplier facts
+   (status, phone, type, delivery, expiry, quote #, settlement discount).
+   Reference info, so it stays ANCHORED in both hover modes — the cursor
+   mode's tbody-scoped hide rules deliberately don't reach it. */
+.qgrid thead th.cg-sup{cursor:default;}
+.qgrid thead th.cg-sup:hover .qg-hoverpanel,
+.qgrid thead th.cg-sup:focus .qg-hoverpanel{display:block;}
+/* Hover mode 'cursor' (29 Jul) — the panel follows the mouse, as production
+   PartsCheck does. It must not intercept the pointer: it is chasing the
+   cursor, so there is nothing to click or scroll inside it, and letting it
+   take pointer events would make it fight the hover that spawned it. */
+.qg-wrap.qg-hover-cursor .qg-hoverpanel{pointer-events:none;}
+/* DWELL GATE (Aju 29 Jul): in cursor mode the panel is withheld until the
+   pointer has rested on a card — .qg-dwell is set by the tracker after
+   500ms without a fast sweep. Crossing the grid to reach a column should
+   not drag a 260px panel through every cell on the way.
+   :hover is still required, so leaving the grid hides it instantly with no
+   JS involved. FOCUS is deliberately NOT gated — the rule above still
+   applies to :focus — because keyboard navigation has no pointer speed to
+   measure and a half-second delay on every Tab would read as a fault. */
+.qg-wrap.qg-hover-cursor .qgrid tbody td.qg-cell:hover .qg-hoverpanel{display:none;}
+.qg-wrap.qg-hover-cursor .qgrid tbody td.qg-cell.qg-dwell:hover .qg-hoverpanel,
+.qg-wrap.qg-hover-cursor .qgrid tbody td.qg-cell:focus .qg-hoverpanel{display:block;}
+.qg-hp-row{display:flex;justify-content:space-between;gap:10px;font-size:10.5px;line-height:1.4;color:#333;text-align:left;}
+.qg-hp-row + .qg-hp-row{margin-top:3px;}
+.qg-hp-label{color:#777;flex:0 0 auto;}
+.qg-hp-val{font-weight:700;text-align:right;}
+.qg-hp-row.profit .qg-hp-val{color:var(--green-deep);}
+.qg-hp-row.profit.neg .qg-hp-val{color:var(--ink);}
+.qg-hp-row.warn .qg-hp-label,
+.qg-hp-row.warn .qg-hp-val{color:var(--warn);}
+.qg-hp-chip{display:inline-flex;vertical-align:middle;position:relative;top:-1px;}
+/* Signal group — separated (own row each) and grouped (one block, one
+   divider from the field list below) — 34th pass. */
+.qg-hp-signals{display:flex;flex-direction:column;gap:5px;padding-bottom:7px;margin-bottom:7px;border-bottom:1px dashed #ddd;}
+.qg-hp-signal{display:flex;align-items:flex-start;gap:6px;}
+.qg-hp-signal .qg-hp-chip{top:1px;flex:0 0 auto;}
+.qg-hp-sigtext{font-size:10.5px;line-height:1.35;color:#333;text-align:left;}
+.qg-hp-sigtext b{color:#111;}
+/* Detailed hover variant (40th pass — Aju's attached reference layout):
+   supplier·type title, chips+info signal rows (incl. an always-shown ETA
+   row), then List / Cost / Sell (+rule pill) / Profit and a Margin·Markup
+   sub-line. */
+/* Detailed panel look per Mat's reference layout (Aju 5 Aug: "Take the
+   look and feel of the hover back to this one"): a roomier white card —
+   hairline grey border + soft shadow instead of the 2px green frame,
+   larger rounder corners, bigger type, generous row rhythm. */
+.qg-hp-detailed{min-width:300px;max-width:340px;padding:14px 16px;
+  border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.16);}
+.qg-hp-title{font-size:12.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;text-align:center;margin-bottom:11px;}
+.qg-hp-rule{display:inline-block;font-size:9px;font-weight:700;background:var(--line);color:#555;border-radius:9px;padding:1px 7px;margin-left:6px;text-transform:none;letter-spacing:0;}
+.qg-hp-detailed .qg-hp-rule{font-size:10.5px;background:#F1F2F4;color:#374151;border-radius:10px;padding:2px 9px;}
+/* Discount sub-rows (Settlement Discount, Discount to list): indented
+   under the figure they discount — the grey % sits beside the label, the
+   VALUE is the discount as negative money, and a hairline RULE closes the
+   row like the line under a handwritten subtraction (Aju 5 Aug: "make it
+   seem like a calculation"), so figure − discount = Your Cost reads as
+   the sum it is. */
+.qg-hp-detailed .qg-hp-row.indent{padding-left:14px;padding-bottom:8px;border-bottom:1px solid #E5E7EB;}
+.qg-hp-sdpct{color:#9CA3AF;font-weight:600;margin-left:7px;}
+/* Fixed-width label text so the Cost "% discount" and Sell "% of list"
+   rule pills start at the same x — i.e. vertically aligned (Aju). Only the
+   detailed hover pairs the two, so scope it there. */
+.qg-hp-detailed .qg-hp-lbltext{display:inline-block;min-width:56px;}
+.qg-hp-sub{font-size:9.5px;color:#999;text-align:right;margin-top:4px;}
+.qg-chip.eta{background:#98A1A9;}
+.qg-chip.eta.warn{background:var(--warn);}
+/* Detailed-hover clarity (40th-pass follow-up — Aju: "less clear than the
+   mockup"): thin dashed separators between signal rows; a slight amber
+   box on a slow-ETA (3-5 days / weeks / EX) row; the value rows a touch
+   larger; and a separator line above the emphasised Profit row. */
+.qg-hp-detailed .qg-hp-signals{gap:0;}
+.qg-hp-detailed .qg-hp-signal{border-bottom:1px dashed #ececec;padding:5px 0;}
+.qg-hp-detailed .qg-hp-signal:first-child{padding-top:0;}
+.qg-hp-detailed .qg-hp-signal:last-child{border-bottom:none;padding-bottom:0;}
+/* The slow-ETA row's amber highlight BLEEDS OUTWARD instead of indenting its
+   contents (Aju: "the ETA chip on hover should be in line with every other
+   chip"). The negative margin cancels the box's own horizontal padding, so
+   the chip and its text stay on the same left edge as every other signal
+   row — the highlight reads as a band behind the row rather than a nested
+   box that shunts it 8px to the right. */
+.qg-hp-detailed .qg-hp-signal.warn{background:#fff4e5;border-bottom:none;border-radius:5px;padding:6px 8px;margin:2px -8px;}
+.qg-hp-detailed .qg-hp-row{font-size:12.5px;}
+.qg-hp-detailed .qg-hp-row + .qg-hp-row{margin-top:8px;}
+.qg-hp-detailed .qg-hp-label{color:#6B7280;}
+.qg-hp-detailed .qg-hp-val{color:#111827;}
+.qg-hp-detailed .qg-hp-sigtext{font-size:12px;}
+.qg-hp-detailed .qg-hp-row.profit{border-top:1px solid #E5E7EB;margin-top:10px;padding-top:10px;}
+.qg-hp-detailed .qg-hp-row.profit .qg-hp-val{font-size:15px;font-weight:800;}
+/* The reference footnote sits LEFT under the profit, one decimal each. */
+.qg-hp-detailed .qg-hp-sub{font-size:11px;color:#9CA3AF;text-align:left;margin-top:7px;}
+/* (The flagged price's red is retired — see .qg-flagprice above.) */
+
+/* ═══ GAP-FILL COMPONENTS (2026-07-28 spec: shadcn/ui inventory, PartsCheck aesthetic) ═══ */
+
+/* ---- Forms kit: field grammar + controls ----
+   .field is the unit of layout AND validation (label / control / hint /
+   error). Controls are Verdana 11px, hairline border, 3px radius; focus
+   is the green ring; error state flags the control via .field.bad. ---- */
+.field{display:flex;flex-direction:column;gap:4px;}
+.field>label{font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.field .req{color:var(--bad);}
+.field .hint{font-size:10px;color:var(--faint);line-height:1.4;}
+.field .error{display:none;font-size:10.5px;font-weight:700;color:var(--bad);}
+.field.bad .error{display:block;}
+.field.bad .input,.field.bad .select,.field.bad .textarea{border-color:var(--bad);}
+
+.input,.select,.textarea{font-family:var(--sans);font-size:11px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:3px;padding:6px 8px;width:100%;min-width:0;}
+.input:hover,.select:hover,.textarea:hover{border-color:var(--line-strong);}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-wash);outline:none;}
+.input:disabled,.select:disabled,.textarea:disabled{background:var(--gauge);color:var(--muted);cursor:not-allowed;}
+.input.sm,.select.sm{padding:4px 6px;font-size:10.5px;}
+.textarea{min-height:64px;resize:vertical;line-height:1.45;}
+.select{appearance:none;-webkit-appearance:none;padding-right:24px;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'><path d='M0 0l4 5 4-5z' fill='%23636363'/></svg>");
+  background-repeat:no-repeat;background-position:right 8px center;}
+
+.input-group{display:flex;align-items:stretch;}
+.input-group .input{border-radius:0;flex:1;}
+.input-group>:first-child{border-radius:3px 0 0 3px;}
+.input-group>:last-child{border-radius:0 3px 3px 0;}
+.input-group .affix{display:flex;align-items:center;padding:0 8px;background:var(--gauge);border:1px solid var(--line);
+  font-family:var(--figure);font-size:10.5px;font-weight:700;color:var(--muted);}
+.input-group .affix:first-child{border-right:0;}
+.input-group .affix:last-child{border-left:0;}
+
+.checkbox,.radio{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:11px;color:var(--ink);cursor:pointer;}
+.checkbox input,.radio input{appearance:none;-webkit-appearance:none;width:13px;height:13px;margin:0;flex:none;
+  background:#fff;border:1px solid var(--line-strong);cursor:pointer;}
+.checkbox input{border-radius:2px;}
+.radio input{border-radius:50%;}
+.checkbox input:checked{background-color:var(--green);border-color:var(--green-deep);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='7' viewBox='0 0 9 7'><path d='M1 3.5l2.5 2.5L8 1' stroke='white' stroke-width='2' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:center;}
+.radio input:checked{border-color:var(--green-deep);background:radial-gradient(circle,var(--green) 0 3.5px,#fff 4px);}
+.checkbox input:disabled,.radio input:disabled{background-color:var(--gauge);border-color:var(--line);cursor:not-allowed;}
+
+.switch{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11px;color:var(--ink);cursor:pointer;}
+.switch input{appearance:none;-webkit-appearance:none;width:28px;height:16px;margin:0;flex:none;border-radius:8px;
+  background:var(--line-strong);position:relative;cursor:pointer;transition:background .12s;}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .12s;}
+.switch input:checked{background:var(--green);}
+.switch input:checked::after{left:14px;}
+.switch input:disabled{opacity:.5;cursor:not-allowed;}
+
+.segctl{display:inline-flex;background:var(--gauge);border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.segctl button{font-family:var(--figure);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  border:0;border-right:1px solid var(--line);background:transparent;color:var(--muted);padding:5px 12px;cursor:pointer;}
+.segctl button:last-child{border-right:0;}
+.segctl button:hover{color:var(--ink);}
+.segctl button.on{background:var(--card);color:var(--green-deep);}
+
+.btn-group{display:inline-flex;}
+.btn-group .btn{border-radius:0;margin-left:-1px;}
+.btn-group .btn:first-child{border-radius:3px 0 0 3px;margin-left:0;}
+.btn-group .btn:last-child{border-radius:0 3px 3px 0;}
+
+/* ---- Overlays: modal / dropdown menu / tooltip / toast ----
+   Modal reuses the panel grammar (grey box-header) in an overlay; menus
+   and toasts are white cards with hairline + the standard soft shadow.
+   Colour is only the semantic left rule on toasts. ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;
+  display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px 16px;}
+.modal{background:var(--card);border:1px solid var(--line-strong);border-radius:3px;width:100%;max-width:440px;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;max-height:80vh;}
+.modal-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 14px;
+  background:var(--gauge);border-bottom:1px solid var(--line);}
+.modal-h h3{margin:0;font-family:var(--figure);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#2b2b2b;}
+.modal-x,.toast-x{border:0;background:transparent;font-size:12px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 4px;flex:none;}
+.modal-x:hover,.toast-x:hover{color:var(--ink);}
+.modal-b{padding:14px;font-size:11px;line-height:1.5;overflow:auto;}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--card-2);}
+
+.menu-wrap{position:relative;display:inline-block;}
+.menu{position:absolute;top:calc(100% + 3px);left:0;min-width:160px;background:var(--card);
+  border:1px solid var(--line);border-radius:3px;box-shadow:0 2px 8px rgba(0,0,0,.12);padding:4px 0;z-index:50;}
+.menu button{display:block;width:100%;text-align:left;border:0;background:transparent;
+  font-family:var(--sans);font-size:11px;color:var(--ink);padding:6px 12px;cursor:pointer;white-space:nowrap;}
+.menu button:hover,.menu button:focus{background:var(--gauge);outline:none;}
+.menu button.danger{color:var(--bad);}
+.menu .menu-sep{height:1px;background:var(--line);margin:4px 0;}
+/* Right-aligned variant — set automatically by pcMenu when a left-aligned
+   menu would run off the viewport (a trigger at the right of a toolbar). */
+.menu.align-right{left:auto;right:0;}
+
+[data-tip]{position:relative;}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#333;color:#fff;font-family:var(--sans);font-size:10.5px;font-weight:400;text-transform:none;letter-spacing:0;
+  line-height:1.35;padding:5px 8px;border-radius:3px;white-space:nowrap;opacity:0;pointer-events:none;z-index:40;}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1;}
+
+.toast-stack{position:fixed;right:16px;bottom:16px;z-index:70;display:flex;flex-direction:column;gap:8px;width:280px;}
+.toast{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:3px;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);padding:9px 12px;display:flex;gap:10px;align-items:flex-start;}
+.toast.ok{border-left-color:var(--good);}
+.toast.warn{border-left-color:var(--warn);}
+.toast.bad{border-left-color:var(--bad);}
+.toast>div:first-child{flex:1;min-width:0;}
+.toast .tt{font-family:var(--figure);font-size:11px;font-weight:700;color:#2b2b2b;}
+.toast .tm{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4;}
+
+/* ---- Feedback & status: alert / progress / spinner / skeleton / empty ----
+   Same semantic hue scale as badges and toasts; grey is the default.
+   Animations carry a prefers-reduced-motion fallback (the global rule in
+   tokens.css only disables transitions). ---- */
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
+  border-left:4px solid var(--muted);border-radius:3px;background:var(--card);font-size:11px;line-height:1.5;color:var(--ink);}
+.alert .at{font-family:var(--figure);font-weight:700;font-size:11px;color:#2b2b2b;display:block;margin-bottom:2px;}
+.alert.ok{border-left-color:var(--good);background:var(--green-wash);}
+.alert.warn{border-left-color:var(--warn);background:var(--warn-wash);}
+.alert.bad{border-left-color:var(--bad);background:var(--bad-wash);}
+
+.progress{height:6px;background:var(--gauge);border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.progress>i{display:block;height:100%;background:var(--green);}
+.progress.warn>i{background:var(--warn);}
+.progress.bad>i{background:var(--bad);}
+
+.spinner{width:14px;height:14px;flex:none;display:inline-block;border-radius:50%;
+  border:2px solid var(--gauge);border-top-color:var(--green);animation:pc-spin .7s linear infinite;}
+@keyframes pc-spin{to{transform:rotate(360deg);}}
+
+.skeleton{background:var(--gauge);border-radius:3px;position:relative;overflow:hidden;}
+.skeleton::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+  animation:pc-shimmer 1.4s infinite;}
+@keyframes pc-shimmer{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+.skeleton-line{height:10px;margin:6px 0;}
+@media (prefers-reduced-motion:reduce){
+  .spinner{animation:none;}
+  .skeleton::after{animation:none;display:none;}
+}
+
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:11px;line-height:1.5;}
+.empty .ei{font-size:20px;opacity:.5;display:block;margin-bottom:8px;}
+.empty .et{font-family:var(--figure);font-size:12px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px;}
+.empty .btn{margin-top:12px;}
+
+/* ---- Canonicalised patterns: tabs / pager / accordion / avatar / crumb ----
+   One canonical grammar each; the pre-existing scoped variants
+   (.lgc-tab, .fq-tab, .lgc-pager, .rail-foot .av) are production mirrors
+   and stay untouched. New surfaces use these. ---- */
+.tabbar{display:flex;gap:2px;border-bottom:1px solid var(--line);}
+.tabbar .tab{border:1px solid transparent;border-bottom:none;background:transparent;color:#555;cursor:pointer;
+  font-family:var(--sans);font-size:11px;padding:7px 12px;border-radius:3px 3px 0 0;margin-bottom:-1px;}
+.tabbar .tab:hover{color:#222;background:#fafafa;}
+.tabbar .tab.on{background:var(--card);border-color:var(--line);border-bottom-color:var(--card);color:var(--green);font-weight:700;}
+.tabbar .tab .ct{font-weight:700;color:var(--muted);margin-left:4px;}
+.tabbar .tab.on .ct{color:var(--green-deep);}
+
+.pager{display:inline-flex;gap:3px;}
+.pager button{border:1px solid var(--line);background:#fff;border-radius:3px;padding:4px 9px;
+  font-family:var(--sans);font-size:10.5px;color:var(--ink);cursor:pointer;}
+.pager button:hover:not(:disabled):not(.on){border-color:var(--line-strong);}
+.pager button.on{background:var(--green);border-color:var(--green-deep);color:#fff;font-weight:700;}
+.pager button:disabled{opacity:.45;cursor:default;}
+
+.accordion{border:1px solid var(--line);border-radius:3px;background:var(--card);overflow:hidden;}
+.accordion details+details{border-top:1px solid var(--line);}
+.accordion summary{list-style:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gauge);
+  cursor:pointer;font-family:var(--figure);font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#444;}
+.accordion summary::-webkit-details-marker{display:none;}
+.accordion summary::before{content:"\25B8";font-size:9px;color:var(--muted);}
+.accordion details[open] summary::before{content:"\25BE";}
+.accordion summary .ct{margin-left:auto;font-family:var(--sans);font-weight:400;letter-spacing:0;text-transform:none;
+  color:var(--muted);font-size:10.5px;}
+.accordion .acc-b{padding:10px 12px;font-size:11px;line-height:1.5;}
+
+.avatar{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;flex:none;
+  background:var(--muted);color:#fff;font-family:var(--figure);font-size:10.5px;font-weight:700;letter-spacing:.02em;}
+.avatar.lg{width:34px;height:34px;font-size:12px;}
+.avatar.self{background:var(--green);}
+
+.crumb{display:flex;align-items:center;gap:7px;font-family:var(--figure);font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.crumb a{color:var(--muted);}
+.crumb a:hover{color:var(--green-deep);text-decoration:underline;}
+.crumb .sep{color:var(--line-strong);}
+.crumb .cur{color:var(--ink);}
+
+/* ---- Supplier responses (quote header) ----------------------------------
+   Production's own header component (appV2 price-grid-view.php
+   ::getSupplierResponses + quotes-controller.php::getSupplierIcons): one
+   circle per invited supplier, always ringed in grey, with an inner filled
+   disc carrying the state colour and a white glyph. Green tick = the
+   supplier has priced (production's `price_cnt > 0`); amber cross = they
+   have not. The supplier's name is on hover — reusing the design system's
+   own [data-tip] tooltip rather than production's bespoke one.
+   Order follows production: the dealer first, then the rest. ---- */
+.suprsp{display:inline-flex;align-items:center;gap:9px;}
+.suprsp-l{font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.suprsp-row{display:inline-flex;gap:6px;}
+.suprsp-dot{width:20px;height:20px;border-radius:50%;border:1px solid var(--line-strong);
+  background:var(--card);display:inline-flex;align-items:center;justify-content:center;
+  flex:none;cursor:help;}
+.suprsp-dot i{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-family:var(--figure);font-size:8.5px;font-weight:700;
+  font-style:normal;line-height:1;}
+.suprsp-dot.ok i{background:var(--signal-ok);}
+.suprsp-dot.no i{background:var(--signal-no);}
+.suprsp-tally{font-family:var(--figure);font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+
+/* ---- Margin-rule chips (quote header) -----------------------------------
+   The insurer's sell rule, per part type, stated on the quote header so the
+   repairer can see WHY each Sell figure is what it is. Rendered from the
+   quote's own rate table, so a chip can never claim a rate the grid doesn't
+   actually bill at. Text tones are darkened members of each type's hue so
+   the chips clear WCAG-AA on their own tint (an invariant asserts it);
+   the border carries the undarkened accent.
+   Parallel takes the AFTERMARKET tint/border with a genuine-blue label —
+   the same rule the grid follows (28 Jul). ---- */
+/* Wrapping is kept, not forced off: dropping "of list" from all five chips
+   saves ~275px, which is what made the bar wrap onto a second row in the
+   first place, so it now fits one line at the widths that matter and still
+   degrades gracefully below them. Deliberately NOT an overflow-x scroller —
+   the chrome above this bar had one removed for exactly that reason, and a
+   row of saved height would be a poor trade for reintroducing it here.
+   row-gap gives the wrapped state room to breathe when it does happen. */
+/* Its own closed box, held slightly apart from Quick Selection below it
+   (Mat) — was flush against that toolbar (shared border seam, no bottom
+   edge of its own); now a real gap, so it needs its own bottom edge
+   back, and the toolbar gets its own top edge (.qg-actionbar) to match. */
+.rulebar{display:flex;align-items:center;gap:8px;row-gap:6px;flex-wrap:wrap;background:var(--card);
+  border:1px solid var(--line);padding:7px 12px;font-size:11px;margin-bottom:8px;}
+.rulebar-l{font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+/* The insurer is the answer the bar exists to give, so it leads the row —
+   and, since the margin-rule dropdown was added (Aju: "select from
+   different margins on this screen"), it's a REAL <select>, not a plain
+   title, wrapped in its own green-outline/white-fill pill so the whole
+   "tick + label + insurer" reads as one unit. font-size on both the
+   label and the select is UNCHANGED from the plain-title version (9px /
+   13px) — only the insurer's own container changed, not its type scale.
+   Square-with-rounded-corners, not a lozenge (Mat), and margin-right
+   holds it apart from the rate legend beside it — its own component,
+   not one more item in that row. */
+.rulebar-pill{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #16A34A;
+  border-radius:6px;background:#fff;padding:3px 10px;margin-right:6px;}
+.rulebar-tick{color:#16A34A;font-size:11px;font-weight:700;line-height:1;}
+.rulebar-sep{color:var(--line);font-size:11px;line-height:1;}
+.rulebar-who-select{font-family:var(--figure);font-size:13px;font-weight:700;color:#16A34A;
+  white-space:nowrap;border:none;background:transparent;padding:0;margin:0;cursor:pointer;}
+.rulebar-who-select:focus-visible{outline:2px solid #16A34A;outline-offset:2px;border-radius:3px;}
+/* A custom table pricing this quote — its own insurer rule, or a different
+   one picked from .rulebar-pill's dropdown — highlights the bar (4 Aug):
+   the announce-toast (below) says it once, the outline is what persists.
+   A full green stroke (Mat), not a left-edge divider + tinted fill —
+   green belongs to the insurer select already, so this just extends its
+   outline to the whole bar rather than introducing a second treatment. */
+.rulebar.applied{border:1.5px solid #16A34A;}
+/* Rate legend (Mat): text + a coloured dot per supplier type, not a
+   bordered/filled pill — the dot alone carries the type's own accent
+   (the same blue/purple/green/orange used on the grid's own column
+   headers; Parallel gets its own dark dot here so it stays distinct
+   from AftM's purple now that neither has a border to tell them apart
+   by). "of list" is repeated per item again, on this reading — the
+   legend reads standalone, not leaning on a label stated once above it. */
+.ruletype{display:inline-flex;align-items:center;gap:5px;font-family:var(--figure);
+  font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;}
+.ruletype b{color:var(--ink);font-weight:700;}
+.ruledot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block;}
+.ruletype.oem .ruledot{background:#3067CB;}
+.ruletype.par .ruledot{background:#333333;}
+.ruletype.aft .ruledot{background:#A852BA;}
+.ruletype.used .ruledot{background:#6BC23C;}
+.ruletype.recon .ruledot{background:#E99F24;}
+
+/* ---- Tab row: trailing action slot ----
+   A tab row often carries one navigation action at its far end (the quote
+   screen's "← Quotes"). It sits ON the row's baseline, clear of the
+   hairline the tabs sit against. */
+.tabbar .tabbar-act{margin-left:auto;align-self:center;margin-bottom:5px;}
+
+/* ---- Quote screen: tabs + panel stack -----------------------------------
+   The quote's own tabs (Check price / Info / Documents) replace the page
+   head that used to repeat the vehicle and quote reference already shown
+   in the identity strip below. The strip closes against the tab row: the
+   row's hairline IS the strip's top edge, and the strip now carries its
+   own bottom stroke so it reads as a finished band rather than an open
+   one (it is followed by the spaced KPI cards, not by another panel). */
+.qg-tabs{margin-bottom:0;}
+.qg-top{border-top:none;border-bottom:1px solid var(--line);}
+.qg-tabbody{margin-top:14px;}
+
+/* Info tab — label/value rows inside the standard panel. */
+.qg-infopanel{max-width:560px;}
+.qg-inforow{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:7px 0;border-bottom:1px solid var(--gauge);}
+.qg-inforow:last-child{border-bottom:0;}
+.qg-infol{color:var(--muted);font-size:11px;}
+.qg-infov{color:var(--ink);font-size:11px;font-weight:700;text-align:right;}
+
+/* Documents tab — the ledger grammar, so it reads like every other list. */
+.qg-docs{border-top:1px solid var(--line);}
+.qg-docs .btn{padding:3px 10px;}
+
+/* ---- Chip legend + row filter (29 Jul) ----------------------------------
+   The signal chips are a vocabulary the reader has to learn, so the legend
+   states it in place, directly above the grid. Each entry is also a filter:
+   it carries the count of lines that have that signal, and clicking it cuts
+   the grid to those lines. An entry with no matches is disabled rather than
+   hidden — "none on this quote" is itself the answer. ---- */
+.qg-legend{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:var(--card);
+  border:1px solid var(--line);border-top:none;padding:7px 12px;}
+/* The legend shares the working row with Quick Selection · Compare ·
+   Clear (Aju 5 Aug) — inside .qg-actionbar it sheds its own bar chrome
+   and rides the toolbar's flex line. Inline it also sheds the "Legend"
+   caption (the pills self-describe beside the controls) and the idle
+   "All N cards in colour" state — that line earns its place only while
+   a filter is actually holding cards back. Together they buy the ~160px
+   that keeps the row to one line at desktop width. */
+.qg-actionbar .qg-legend{border:none;background:none;padding:0;flex-wrap:nowrap;}
+.qg-actionbar .qg-legend-cap{display:none;}
+.qg-actionbar .qg-legend-state.qg-legend-allon{display:none;}
+/* The strip ABOVE the quote header (Aju 5 Aug, per Mat's layout):
+   supplier responses left — label stacked over the roundels, as in the
+   reference — page-level actions (Print · Cancel Request · Save) right. */
+.qg-topstrip{border-bottom:none;}
+.qg-topstrip .suprsp{flex-direction:column;align-items:flex-start;gap:3px;}
+.qg-topstrip .suprsp-l{margin-bottom:0;}
+.qg-legend-cap{font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-right:2px;white-space:nowrap;}
+/* One pill at a time (Aju 29 Jul). A pill is a plain, quiet keyline until
+   it IS the filter — then it takes the green wash, green keyline and a bold
+   label, and its count inverts to solid green. Nothing else on the bar is
+   green, so the single filled pill is unmistakable without needing an
+   off-state treatment on the other four. */
+.qg-legend-item{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);
+  background:#fff;border-radius:20px;padding:3px 10px;cursor:pointer;font:inherit;font-size:10.5px;
+  color:var(--ink);white-space:nowrap;transition:background .12s,border-color .12s,opacity .12s;}
+.qg-legend-item:hover:not(:disabled){border-color:var(--line-strong);background:var(--card-2);}
+/* No bold on the active pill: the wash and keyline already single it out,
+   and re-weighting the label reflows the pill a few px on every click. */
+.qg-legend-item.on{border-color:var(--green);background:var(--green-wash);color:var(--green-deep);}
+/* No lines carry this signal on this quote — still stated, not clickable. */
+.qg-legend-item:disabled{opacity:.4;cursor:default;}
+.qg-legend-item:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+.qg-legend-l em{font-style:normal;color:var(--muted);}
+.qg-legend-item.on .qg-legend-l em{color:var(--green-deep);}
+.qg-legend-n{font-family:var(--figure);font-weight:700;font-size:10px;color:var(--muted);
+  background:var(--gauge);border-radius:9px;padding:0 6px;}
+.qg-legend-item.on .qg-legend-n{background:var(--green);color:#fff;}
+.qg-legend-state{margin-left:auto;font-size:10.5px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;}
+.qg-legend-allon{color:var(--faint);}
+.qg-legend-clear{border:1px solid var(--line);background:#fff;border-radius:3px;padding:2px 8px;
+  font:inherit;font-size:10px;color:var(--green-deep);cursor:pointer;}
+.qg-legend-clear:hover{background:var(--green-wash);}
+
+/* ---- Compare drawer (29 Jul) --------------------------------------------
+   The hover panel holds exactly the detail a repairer wants to weigh up,
+   but only one at a time. The drawer stacks the chosen offers' panels side
+   by side, rendered by the SAME generator the hover uses, so a comparison
+   can never say something different from the hover it came from.
+   No backdrop: you go on clicking the grid while it is open — that is how
+   you fill it. ---- */
+.qg-cmp{position:fixed;top:0;right:0;bottom:0;width:390px;max-width:92vw;z-index:55;
+  background:var(--card);border-left:1px solid var(--line-strong);box-shadow:-4px 0 18px rgba(0,0,0,.14);
+  display:flex;flex-direction:column;transform:translateX(100%);transition:transform .18s ease;
+  visibility:hidden;}
+.qg-cmp.open{transform:translateX(0);visibility:visible;}
+@media (prefers-reduced-motion:reduce){ .qg-cmp{transition:none;} }
+.qg-cmp-h{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gauge);
+  border-bottom:1px solid var(--line);flex:none;}
+.qg-cmp-h h3{margin:0;font-family:var(--figure);font-size:12px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:#2b2b2b;}
+.qg-cmp-count{font-family:var(--figure);font-size:10px;font-weight:700;color:var(--muted);
+  background:var(--card);border:1px solid var(--line);border-radius:9px;padding:1px 7px;}
+.qg-cmp-clear{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:3px;
+  padding:3px 9px;font:inherit;font-size:10px;color:var(--green-deep);cursor:pointer;}
+.qg-cmp-clear:hover{background:var(--green-wash);}
+.qg-cmp-h .modal-x{margin-left:0;}
+.qg-cmp-hint{padding:6px 12px;background:var(--green-wash);border-bottom:1px solid var(--line);
+  font-size:10px;color:var(--green-deep);flex:none;}
+.qg-cmp-b{flex:1;overflow-y:auto;padding:10px 12px 16px;display:flex;flex-direction:column;gap:10px;}
+.qg-cmp-card{border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.qg-cmp-head{display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--card-2);
+  border-bottom:1px solid var(--line);}
+.qg-cmp-n{width:16px;height:16px;border-radius:3px;background:#4B5563;color:#fff;flex:none;
+  display:grid;place-items:center;font-family:var(--figure);font-size:9px;font-weight:700;}
+.qg-cmp-part{font-size:10.5px;font-weight:700;color:var(--ink);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qg-cmp-x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:11px;padding:0 2px;}
+.qg-cmp-x:hover{color:var(--bad);}
+.qg-cmp-tags{display:flex;gap:5px;padding:6px 8px 0;}
+.qg-cmp-tag{font-family:var(--figure);font-size:9px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:9px;padding:1px 7px;background:var(--gauge);color:var(--muted);}
+.qg-cmp-tag.good{background:var(--green-wash);color:var(--green-deep);}
+/* The hover panel, un-hidden and un-floated for use inside the drawer. */
+.qg-cmp-card .qg-hoverpanel{display:block;position:static;border:0;border-radius:0;box-shadow:none;
+  min-width:0;max-width:none;max-height:none;width:100%;padding:9px 11px;}
+/* Compare-mode marker on the grid: a neutral numbered pin, never a
+   semantic hue — green already means "selected" here. */
+.qgrid .cg-cell.cmp{box-shadow:inset 0 0 0 2px #4B5563;}
+.qgrid .cg-cell.sel.cmp{box-shadow:inset 0 0 0 2px var(--green),inset 0 0 0 4px #4B5563;}
+.qg-cmp-pin{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:3px;
+  background:#4B5563;color:#fff;display:grid;place-items:center;z-index:3;
+  font-family:var(--figure);font-size:9px;font-weight:700;}
+.qg-cmp-btn.on{background:var(--green-wash);}
+.qg-cmp-btn svg{flex:none;}
+/* Quick Selection as two selectable buttons, not a <select> (Mat) —
+   whichever one is applied turns SOLID green with a tick, a stronger
+   treatment than Compare's own light-wash .on above: this is "this is
+   the pick in effect", not just an open/closed panel state. */
+.qg-quick-btn.on{background:var(--green);border-color:var(--green);color:#fff;}
+.qg-quick-tick{margin-right:4px;}
