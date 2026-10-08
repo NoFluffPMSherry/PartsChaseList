@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PartsCheck Orders: Chase List (B, by supplier)</title>
+<!-- Version B: the list is people to ring, not parts. One card per supplier, worst first, one Chase button each. Sample data only. -->
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/pcx.css">
+<style>
+.pcx-b-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-top:none;}
+.pcx-b-bar .field.q{min-width:240px;}
+.pcx-b-bar .grow{flex:1;}
+.pcx-card{margin-top:14px;background:var(--card);border:1px solid var(--line);border-top:3px solid var(--green);}
+.pcx-card.hot{border-top-color:var(--bad);}
+.pcx-card-h{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--gauge);}
+.pcx-card-h h3{margin:0;font-family:var(--figure);font-size:14px;}
+.pcx-card-h .who{flex:1;}
+.pcx-card-h .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.pcx-card-h .sub a{color:inherit;}
+.pcx-card-h .chd{font-size:10.5px;color:var(--muted);text-align:right;}
+.pcx-card table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.pcx-card td{padding:7px 14px;border-top:1px solid var(--gauge);vertical-align:top;}
+.pcx-card tr:first-child td{border-top:0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="pcx-ver"><b>Prototype</b><a href="simple.html">A &middot; Simple list</a><a class="on" href="by-supplier.html">B &middot; By supplier</a><a href="index.html">C &middot; Full filters</a></div>
+  <div class="pcx-top">
+    <div class="pcx-logo"><b>&#10003;</b> PARTSCHECK</div>
+    <div class="pcx-nav"><span>Dashboard</span><span>Get Price</span><span>Check Price</span><span class="on">Orders</span><span>Credits</span><span>Reports</span><span>Settings</span></div>
+  </div>
+  <div class="pcx-sub"><span class="on">All Orders</span><span>Credit Management</span></div>
+  <div class="pcx-page">
+    <div class="lgc-tabs" role="tablist">
+      <button class="lgc-tab" role="tab">All <span class="ct">9</span></button>
+      <button class="lgc-tab" role="tab">Over Due <span class="ct" style="color:var(--bad);">8</span></button>
+      <button class="lgc-tab" role="tab">Due Today <span class="ct">0</span></button>
+      <button class="lgc-tab" role="tab">Back Orders <span class="ct">0</span></button>
+      <button class="lgc-tab" role="tab">Authority Req. <span class="ct">0</span></button>
+      <button class="lgc-tab on" role="tab" aria-selected="true">Chase List <span class="ct" id="tabCount">0</span></button>
+    </div>
+    <div class="pcx-b-bar">
+      <div class="field q"><label>Search</label><input class="input" type="search" id="qSel" placeholder="Supplier, part, job, rego or PO"></div>
+      <div class="field"><label>Site</label><select class="select" id="siteSel"><option value="">All sites</option></select></div>
+      <label class="checkbox" style="padding-bottom:6px;"><input type="checkbox" id="ovOnly"> Overdue only</label>
+      <div class="grow"></div>
+      <button class="btn" id="btnCsv">Export CSV</button>
+      <button class="btn" id="btnPrint">Print list</button>
+    </div>
+    <div id="results"></div>
+    <p class="pcx-note" style="margin-top:14px;">Sample data as at 7 Oct 2026. Suppliers ordered by their most overdue part. Overdue = days past the supplier's ETA (or the requested delivery date if there is no ETA yet).</p>
+  </div>
+</div>
+<div class="toast-stack" id="toasts"></div>
+<div id="modalRoot"></div>
+<div id="printSection" hidden>
+  <div class="pcx-noprint" style="max-width:860px;margin:14px auto 0;display:flex;justify-content:space-between;align-items:center;padding:0 4px;"><b>Print preview</b><span style="display:flex;gap:8px;"><button class="btn" onclick="window.print()">Print</button><button class="btn" id="closePrint">Close preview</button></span></div>
+  <div class="pcx-sheet" id="sheet"></div>
+</div>
+<script src="assets/core.js"></script>
+<script>
+function visible(){
+  var site=$('siteSel').value, ov=$('ovOnly').checked, q=$('qSel').value.trim().toLowerCase();
+  return LINES.filter(function(l){
+    if(out(l)<=0) return false;
+    if(site && l.site!==site) return false;
+    if(ov && late(l)<=0) return false;
+    return !q || (l.part+' '+l.no+' '+l.po+' '+l.job+' '+l.veh+' '+l.s+' '+JOBS[l.job].rego).toLowerCase().indexOf(q)>=0;
+  });
+}
+window.pcxSet=function(sup){return visible().filter(function(l){return l.s===sup;});};
+window.pcxRender=render;
+function render(){
+  var ls=sorted(visible());
+  $('tabCount').textContent=ls.length;
+  if(!ls.length){$('results').innerHTML='<div class="pcx-empty" style="margin-top:14px;border-top:1px solid var(--line);">Nothing to chase. Nice.</div>';return;}
+  var h='';
+  uniq(ls.map(function(l){return l.s;})).forEach(function(s){
+    var gl=ls.filter(function(l){return l.s===s;}), worst=late(gl[0]);
+    var chased=gl.filter(function(l){return l.ch;}).sort(function(a,b){return a.ch.on<b.ch.on?1:-1;})[0];
+    var ct=chased?'Last chased '+(days(chased.ch.on)===0?'<b class="pcx-ch-t">today</b>':(days(chased.ch.on)===1?'yesterday':days(chased.ch.on)+' days ago'))+' &middot; '+esc(chased.ch.how.toLowerCase())+' by '+esc(chased.ch.by):'Not chased yet';
+    h+='<div class="pcx-card'+(worst>=7?' hot':'')+'"><div class="pcx-card-h"><div class="who"><h3>'+esc(s)+'</h3><div class="sub">Ph <a href="tel:'+SUP[s].ph.replace(/ /g,'')+'">'+SUP[s].ph+'</a> &middot; '+plural(gl.length,'part')+(worst>0?' &middot; worst is '+plural(worst,'day')+' overdue':'')+'</div></div>'+
+      '<div class="chd">'+ct+'</div><button class="btn btn-primary" data-chaseall="'+esc(s)+'">Chase</button></div><table><colgroup><col style="width:34%"><col style="width:26%"><col style="width:18%"><col style="width:22%"></colgroup><tbody>';
+    gl.forEach(function(l){
+      h+='<tr><td><b>'+esc(l.part)+'</b></td><td>'+jobLink(l).replace('pcx-link','pcx-link" style="font-weight:400')+' <span class="pcx-sm" style="display:inline;">'+esc(l.veh)+'</span></td><td>'+pill(l)+'</td><td>'+etaText(l)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+  $('results').innerHTML=h;
+}
+uniq(LINES.map(function(l){return l.site;})).sort().forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s;$('siteSel').appendChild(o);});
+['siteSel','ovOnly'].forEach(function(id){$(id).addEventListener('change',render);});
+$('qSel').addEventListener('input',render);
+$('results').addEventListener('click',function(e){var a=e.target.closest('[data-chaseall]'); if(a) openChase(a.dataset.chaseall,null);});
+$('btnCsv').onclick=function(){exportCsv(visible());};
+$('btnPrint').onclick=function(){openPrint(visible());};
+render();
+</script>
+</body>
+</html>

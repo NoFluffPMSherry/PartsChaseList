@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PartsCheck Orders: Chase List (A, simple list)</title>
+<!-- Version A: the smallest thing that works. One flat table, three filters, one action. Sample data only. -->
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/pcx.css">
+<style>
+.pcx-a-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-top:none;}
+.pcx-a-bar .field.q{min-width:240px;}
+.pcx-a-bar .grow{flex:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="pcx-ver"><b>Prototype</b><a class="on" href="simple.html">A &middot; Simple list</a><a href="by-supplier.html">B &middot; By supplier</a><a href="index.html">C &middot; Full filters</a></div>
+  <div class="pcx-top">
+    <div class="pcx-logo"><b>&#10003;</b> PARTSCHECK</div>
+    <div class="pcx-nav"><span>Dashboard</span><span>Get Price</span><span>Check Price</span><span class="on">Orders</span><span>Credits</span><span>Reports</span><span>Settings</span></div>
+  </div>
+  <div class="pcx-sub"><span class="on">All Orders</span><span>Credit Management</span></div>
+  <div class="pcx-page">
+    <div class="lgc-tabs" role="tablist">
+      <button class="lgc-tab" role="tab">All <span class="ct">9</span></button>
+      <button class="lgc-tab" role="tab">Over Due <span class="ct" style="color:var(--bad);">8</span></button>
+      <button class="lgc-tab" role="tab">Due Today <span class="ct">0</span></button>
+      <button class="lgc-tab" role="tab">Back Orders <span class="ct">0</span></button>
+      <button class="lgc-tab" role="tab">Authority Req. <span class="ct">0</span></button>
+      <button class="lgc-tab on" role="tab" aria-selected="true">Chase List <span class="ct" id="tabCount">0</span></button>
+    </div>
+    <div class="pcx-a-bar">
+      <div class="field q"><label>Search</label><input class="input" type="search" id="qSel" placeholder="Part, job, rego or PO"></div>
+      <div class="field"><label>Supplier</label><select class="select" id="supSel"><option value="">All suppliers</option></select></div>
+      <div class="field"><label>Show</label><select class="select" id="showSel"><option value="all">Everything outstanding</option><option value="over">Overdue only</option><option value="noeta">No ETA only</option><option value="fresh">Not chased today</option></select></div>
+      <div class="grow"></div>
+      <button class="btn" id="btnCsv">Export CSV</button>
+      <button class="btn" id="btnPrint">Print list</button>
+    </div>
+    <div class="pcx-wrap" id="results"></div>
+    <p class="pcx-note" style="margin-top:14px;">Sample data as at 7 Oct 2026. Overdue = days past the supplier's ETA (or the requested delivery date if there is no ETA yet). Most overdue first.</p>
+  </div>
+</div>
+<div class="toast-stack" id="toasts"></div>
+<div id="modalRoot"></div>
+<div id="printSection" hidden>
+  <div class="pcx-noprint" style="max-width:860px;margin:14px auto 0;display:flex;justify-content:space-between;align-items:center;padding:0 4px;"><b>Print preview</b><span style="display:flex;gap:8px;"><button class="btn" onclick="window.print()">Print</button><button class="btn" id="closePrint">Close preview</button></span></div>
+  <div class="pcx-sheet" id="sheet"></div>
+</div>
+<script src="assets/core.js"></script>
+<script>
+function visible(){
+  var sup=$('supSel').value, show=$('showSel').value, q=$('qSel').value.trim().toLowerCase();
+  return LINES.filter(function(l){
+    if(out(l)<=0) return false;
+    if(sup && l.s!==sup) return false;
+    if(show==='over' && late(l)<=0) return false;
+    if(show==='noeta' && l.eta) return false;
+    if(show==='fresh' && l.ch && days(l.ch.on)===0) return false;
+    return !q || (l.part+' '+l.no+' '+l.po+' '+l.job+' '+l.veh+' '+l.s+' '+JOBS[l.job].rego).toLowerCase().indexOf(q)>=0;
+  });
+}
+window.pcxSet=function(sup){return visible().filter(function(l){return l.s===sup;});};
+window.pcxRender=render;
+function render(){
+  var ls=sorted(visible());
+  $('tabCount').textContent=ls.length;
+  if(!ls.length){$('results').innerHTML='<div class="pcx-empty">Nothing to chase. Nice.</div>';return;}
+  var h='<div class="cgrid-wrap"><table class="cgrid"><colgroup><col style="width:30%"><col style="width:20%"><col style="width:15%"><col style="width:16%"><col style="width:19%"></colgroup>'+
+    '<thead><tr><th>Part</th><th>Supplier</th><th>Status</th><th>Supplier ETA</th><th></th></tr></thead><tbody>';
+  ls.forEach(function(l){
+    var c=l.ch?'Chased '+(days(l.ch.on)===0?'<b class="pcx-ch-t">today</b>':(days(l.ch.on)===1?'yesterday':days(l.ch.on)+' days ago'))+' &middot; '+esc(l.ch.by):'';
+    h+='<tr class="ln"><td><b>'+esc(l.part)+'</b><div class="pcx-sm">'+jobLink(l).replace('pcx-link','pcx-link" style="font-weight:400')+' &middot; '+esc(l.veh)+' &middot; <span class="pcx-po"><a href="#" onclick="return poOpen(\''+l.po+'\');">'+l.po+'</a></span></div></td>'+
+      '<td><b>'+esc(l.s)+'</b><div class="pcx-sm">'+SUP[l.s].ph+'</div></td><td>'+pill(l)+'</td><td>'+etaText(l)+'</td>'+
+      '<td class="pcx-r"><button class="btn pcx-btnchase" data-chase="'+LINES.indexOf(l)+'">Chase</button>'+(c?'<div class="pcx-sm">'+c+'</div>':'')+'</td></tr>';
+  });
+  $('results').innerHTML=h+'</tbody></table></div>';
+}
+uniq(LINES.map(function(l){return l.s;})).sort().forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s;$('supSel').appendChild(o);});
+['supSel','showSel'].forEach(function(id){$(id).addEventListener('change',render);});
+$('qSel').addEventListener('input',render);
+$('results').addEventListener('click',function(e){var b=e.target.closest('[data-chase]'); if(b){var l=LINES[+b.dataset.chase]; openChase(l.s,l);}});
+$('btnCsv').onclick=function(){exportCsv(visible());};
+$('btnPrint').onclick=function(){openPrint(visible());};
+render();
+</script>
+</body>
+</html>

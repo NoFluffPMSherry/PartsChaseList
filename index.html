@@ -10,11 +10,17 @@
   re-pulled fresh from github.com/partscheck/design-system (commit 38dd920,
   28 Sep 2026) into ./assets. Only the pcx-* rules below are local, and they
   only do layout for this screen.
-  Sample data only. Receipting at line level and credit/cancel/NLA flags are
-  assumptions pending Matt Roggenkamp's answers.
+  v2 (8 Oct 2026): Mat James + John Stokes feedback. One flat table with the
+  supplier in the row, "13 days overdue" status (vs supplier ETA), the
+  delayed message folded into the ETA, a per-row Chase action, last chased,
+  supplier phone, and more filters.
+  Sample data only. Receipting at line level, credit/cancel/NLA flags, the
+  overdue basis and in-platform messaging per PO are assumptions pending
+  Matt Roggenkamp's answers.
 -->
 <link rel="stylesheet" href="assets/tokens.css">
 <link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/pcx.css">
 <style>
 [hidden]{display:none !important;}
 .pcx-top{background:#fff;border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;padding:0 24px;gap:28px;}
@@ -25,49 +31,78 @@
 .pcx-sub{background:#333;color:#fff;height:40px;display:flex;align-items:center;padding:0 24px;gap:28px;font-family:var(--figure);font-size:12px;text-transform:uppercase;}
 .pcx-sub .on{border-bottom:3px solid var(--green);padding:10px 0 7px;}
 .pcx-page{max-width:1240px;margin:0 auto;padding:18px 24px 60px;}
-.pcx-bar{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-top:none;}
-.pcx-bar .field{min-width:130px;}
+.pcx-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-top:none;}
+.pcx-bar .field{min-width:112px;}
+.pcx-bar .field.q{min-width:190px;}
 .pcx-bar .grow{flex:1;}
-.pcx-dealer{margin-top:18px;}
-.pcx-dealer-h{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--gauge);border:1px solid var(--line);border-top:3px solid var(--green);}
-.pcx-dealer-h h3{margin:0;font-family:var(--figure);font-size:12.5px;}
-.pcx-dealer-h .sp{flex:1;}
-.pcx-sub2{padding:6px 12px;background:var(--card-2);border:1px solid var(--line);border-top:none;font-family:var(--figure);font-weight:700;font-size:10.5px;color:#444;}
-.pcx-date{margin-top:18px;padding:6px 12px;background:#333;color:#fff;font-family:var(--figure);font-weight:700;font-size:11px;}
+.pcx-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 14px;background:var(--card-2);border:1px solid var(--line);border-top:none;}
+.pcx-chip{font-family:var(--figure);font-size:11px;font-weight:700;color:var(--ink-soft);background:#fff;border:1px solid var(--line-strong);border-radius:12px;padding:3px 11px;cursor:pointer;}
+.pcx-chip:hover{border-color:var(--green);}
+.pcx-chip.on{background:var(--green-wash);border-color:var(--green);color:var(--green-deep);}
+.pcx-chip .n{font-weight:400;margin-left:4px;color:var(--muted);}
+.pcx-chip.on .n{color:var(--green-deep);}
+.pcx-chips .sp{flex:1;}
+.pcx-chips .pcx-count{font-size:11px;color:var(--muted);}
+.pcx-clear{font-size:11px;background:none;border:0;color:var(--green-deep);cursor:pointer;font-weight:700;padding:0;}
+.pcx-clear:hover{text-decoration:underline;}
 .pcx-link{font-family:var(--figure);font-weight:700;color:var(--green-deep);text-decoration:none;}
 .pcx-link:hover{text-decoration:underline;}
-.pcx-colhead{margin-top:14px;position:sticky;top:0;z-index:20;background:var(--paper);}
-.pcx-colhead .cgrid-wrap{border-top:1px solid var(--line);}
-.pcx-datehd{margin-top:20px;font-family:var(--figure);font-size:15px;font-weight:400;color:#2b2b2b;border-bottom:2px solid #333;padding-bottom:3px;}
-.pcx-jobhd{margin-top:10px;font-family:var(--figure);font-size:13px;font-weight:700;}
-.pcx-pohd{display:flex;justify-content:space-between;gap:12px;margin-top:8px;padding:6px 10px;background:var(--card-2);border:1px solid var(--line);border-bottom:none;font-family:var(--figure);font-weight:700;font-size:12px;}
-.pcx-delay td{border-top:none;font-style:italic;color:var(--warn);font-size:10.5px;padding:2px 10px 6px 24px !important;}
-.pcx-wrap tbody tr.ln:nth-child(odd) td{background:var(--card-2);}
-.pcx-note{color:var(--faint);font-weight:400;font-size:10px;}
+.pcx-wrap .cgrid-wrap{overflow:visible;border-top:none;}
 .pcx-wrap .cgrid{min-width:0;table-layout:fixed;}
-.pcx-wrap .cgrid td{padding:7px 10px;}
-.pcx-wrap tr.ex td{color:#777;background:var(--card-2);}
+.pcx-wrap .cgrid thead th{position:sticky;top:0;z-index:20;white-space:nowrap;padding:7px 10px;border-top:1px solid var(--line);}
+.pcx-wrap .cgrid thead th.s{cursor:pointer;user-select:none;}
+.pcx-wrap .cgrid thead th.s:hover{background:#E4E4E4;}
+.pcx-wrap .cgrid thead th .ar{color:var(--green-deep);margin-left:3px;font-size:9px;}
+.pcx-wrap .cgrid td{padding:6px 10px;}
+.pcx-wrap tbody tr.ln:nth-child(even) td{background:var(--card-2);}
+.pcx-wrap tbody tr.ln:hover td{background:#F1F8F3;}
+.pcx-wrap tbody tr.gh td{padding:0;border-left:0;border-right:0;}
+.pcx-gh{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--gauge);border-top:3px solid var(--green);font-family:var(--figure);}
+.pcx-gh h3{margin:0;font-size:12.5px;}
+.pcx-gh .sp{flex:1;}
+.pcx-gh .ph{font-size:11px;color:var(--ink-soft);}
+.pcx-gh .ph a{color:inherit;}
+.pcx-sm{font-size:10px;color:var(--muted);margin-top:1px;font-weight:400;}
+.pcx-r{text-align:right;}
+.pcx-po{color:var(--muted);font-size:10.5px;}
+.pcx-po a{color:var(--muted);text-decoration:none;font-weight:400;font-family:var(--sans);}
+.pcx-po a:hover{color:var(--green-deep);text-decoration:underline;}
+.pcx-eta-d{color:var(--warn);font-weight:700;}
+.pcx-ch-t{color:var(--good);font-weight:700;}
+.pcx-ch-n{color:var(--muted);}
+.pcx-btnchase{padding:3px 11px;font-size:10.5px;}
+.pcx-note{color:var(--faint);font-weight:400;font-size:10px;}
 .pcx-empty{padding:30px;text-align:center;color:var(--muted);background:var(--card);border:1px solid var(--line);border-top:none;}
-.pcx-sheet{background:#fff;max-width:820px;margin:12px auto 40px;padding:26px 34px 34px;border:1px solid var(--line);font-family:var(--figure);color:#000;}
+.pcx-modal .modal{max-width:600px;}
+.pcx-modal .ln{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--gauge);}
+.pcx-modal .ln .tx{flex:1;}
+.pcx-modal textarea{width:100%;box-sizing:border-box;min-height:150px;margin-top:6px;}
+.pcx-modal .alert{background:var(--warn-wash);border:1px solid var(--warn);color:var(--warn);padding:6px 10px;margin-bottom:10px;font-weight:700;font-size:11px;}
+.pcx-modal .contact{margin-bottom:10px;font-size:11.5px;}
+.pcx-sheet{background:#fff;max-width:860px;margin:12px auto 40px;padding:26px 34px 34px;border:1px solid var(--line);font-family:var(--figure);color:#000;}
 .pcx-sheet .rh{text-align:center;font-size:12px;}
 .pcx-sheet .rt{text-align:center;font-size:16px;font-weight:700;margin:6px 0 10px;}
 .pcx-sheet .rm{display:flex;justify-content:space-between;font-size:10.5px;padding-bottom:3px;border-bottom:3px solid #000;}
 .pcx-sheet table{width:100%;border-collapse:collapse;table-layout:fixed;}
-.pcx-sheet .ch th{text-align:left;font-size:11.5px;font-weight:700;padding:12px 4px 8px;background:transparent !important;color:#000 !important;border:0;text-transform:none;letter-spacing:0;}
+.pcx-sheet .ch th{text-align:left;font-size:11px;font-weight:700;padding:12px 4px 6px;background:transparent !important;color:#000 !important;border:0;text-transform:none;letter-spacing:0;}
 .pcx-sheet .ch th.n,.pcx-sheet td.n{text-align:right;}
-.pcx-sheet .pdt{margin:16px 0 6px;font-size:18px;font-weight:400;color:#222;}
-.pcx-sheet .pjb{margin:8px 0 4px;font-size:14px;font-weight:700;}
-.pcx-sheet .pjb a{color:#000;text-decoration:underline;}
-.pcx-sheet .ppo{display:flex;justify-content:space-between;margin-top:8px;font-size:14px;font-weight:700;}
-.pcx-sheet td{font-size:11.5px;padding:4px 4px;}
+.pcx-sheet .pgh{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 4px;padding-bottom:2px;border-bottom:2px solid #333;font-size:14px;font-weight:700;}
+.pcx-sheet .pgh span{font-size:11.5px;font-weight:400;}
+.pcx-sheet td{font-size:11px;padding:4px 4px;vertical-align:top;}
+.pcx-sheet td small{display:block;font-size:9.5px;color:#555;}
 .pcx-sheet tr.z td{background:#f0f0f0;}
-.pcx-sheet tr.dl td{font-style:italic;font-size:11px;padding:0 4px 5px 28px;}
 .pcx-sheet .pft{margin-top:18px;border-top:1px solid #999;padding-top:4px;font-size:9.5px;color:#555;display:flex;justify-content:space-between;}
-@media print{.pcx-noprint,.pcx-top,.pcx-sub,#app{display:none !important;}#printSection{display:block !important;}</style>
+@media print{.pcx-noprint,.pcx-top,.pcx-sub,#app,.toast-stack,.modal-backdrop{display:none !important;}#printSection{display:block !important;}.pcx-sheet{border:0;margin:0;padding:0;max-width:none;}}
+.pcx-ver{background:#1f1f1f;color:#bbb;font-family:var(--figure);font-size:10.5px;padding:6px 24px;display:flex;gap:16px;align-items:center;}
+.pcx-ver a{color:#bbb;text-decoration:none;padding:2px 8px;border-radius:10px;}
+.pcx-ver a:hover{color:#fff;}
+.pcx-ver a.on{background:var(--green);color:#fff;font-weight:700;}
+</style>
 </head>
 <body>
 
 <div id="app">
+  <div class="pcx-ver"><b>Prototype</b><a href="simple.html">A &middot; Simple list</a><a href="by-supplier.html">B &middot; By supplier</a><a class="on" href="index.html">C &middot; Full filters</a></div>
   <div class="pcx-top">
     <div class="pcx-logo"><b>&#10003;</b> PARTSCHECK</div>
     <div class="pcx-nav"><span>Dashboard</span><span>Get Price</span><span>Check Price</span><span class="on">Orders</span><span>Credits</span><span>Reports</span><span>Settings</span></div>
@@ -76,8 +111,8 @@
 
   <div class="pcx-page">
     <div class="lgc-tabs" role="tablist">
-      <button class="lgc-tab" role="tab">All <span class="ct">5</span></button>
-      <button class="lgc-tab" role="tab">Over Due <span class="ct" style="color:var(--bad);">5</span></button>
+      <button class="lgc-tab" role="tab">All <span class="ct">9</span></button>
+      <button class="lgc-tab" role="tab">Over Due <span class="ct" style="color:var(--bad);">8</span></button>
       <button class="lgc-tab" role="tab">Due Today <span class="ct">0</span></button>
       <button class="lgc-tab" role="tab">Back Orders <span class="ct">0</span></button>
       <button class="lgc-tab" role="tab">Authority Req. <span class="ct">0</span></button>
@@ -85,16 +120,23 @@
     </div>
 
     <div class="pcx-bar">
+      <div class="field q"><label>Search</label><input class="input" type="search" id="qSel" placeholder="Job, rego, claim, PO or part"></div>
       <div class="field" id="fFrom"><label>Ordered from <span class="req">*</span></label><input class="input" type="date" id="dFrom" value="2026-09-07"></div>
       <div class="field" id="fTo"><label>Ordered to <span class="req">*</span></label><input class="input" type="date" id="dTo" value="2026-10-07"><span class="error">Date range is required</span></div>
-      <div class="field"><label>Filter suppliers</label><select class="select" id="supSel"><option value="">Select All</option></select></div>
+      <div class="field"><label>Supplier</label><select class="select" id="supSel"><option value="">All suppliers</option></select></div>
+      <div class="field"><label>Type</label><select class="select" id="typeSel"><option value="">All</option><option>OEM</option><option>Parallel</option><option>Aftermarket</option><option>Certified aftermarket</option><option>Used</option><option>Reconditioned</option></select></div>
+      <div class="field"><label>Site</label><select class="select" id="siteSel"><option value="">All sites</option></select></div>
+      <div class="field"><label>Last chased</label>
+        <select class="select" id="chSel"><option value="">Any</option><option value="never">Never chased</option><option value="3d">Not chased in 3+ days</option><option value="today">Chased today</option></select>
+      </div>
       <div class="field"><label>Group by</label>
-        <div class="segctl" id="grp"><button class="on" data-g="dealer">Dealer</button><button data-g="job">Job</button></div>
+        <div class="segctl" id="grp"><button data-g="none" class="on">None</button><button data-g="supplier">Supplier</button><button data-g="job">Job</button></div>
       </div>
       <div class="grow"></div>
       <button class="btn" id="btnCsv">Export CSV</button>
       <button class="btn" id="btnPrint">Print list</button>
     </div>
+    <div class="pcx-chips" id="chips"></div>
 
     <div class="pcx-wrap" id="results"></div>
 
@@ -103,166 +145,163 @@
         <summary>Needs re-order: parts the dealer marked No Longer Available <span class="ct" id="nlaCt">0</span></summary>
         <div class="acc-b" id="nlaBody"></div>
       </details>
+      <details>
+        <summary>Left off this list: credited or cancelled <span class="ct" id="exCt">0</span></summary>
+        <div class="acc-b" id="exBody"></div>
+      </details>
     </div>
-    <p class="pcx-note" style="margin-top:14px;">Sample data as at 7 Oct 2026. Outstanding = ordered, minus received, minus credited or cancelled. Credited, cancelled and NLA lines never appear on a dealer's chase list; they are listed below it so nothing disappears silently.</p>
+    <p class="pcx-note" style="margin-top:14px;">Sample data as at 7 Oct 2026. Overdue = days past the supplier's ETA (or the requested delivery date where there is no ETA yet). Outstanding = ordered, minus received, minus credited or cancelled. Credited, cancelled and NLA lines never appear on a dealer's chase list; they are listed below it so nothing disappears silently.</p>
   </div>
 </div>
 
 <div class="toast-stack" id="toasts"></div>
+<div id="modalRoot"></div>
 
 <!-- Print preview -->
 <div id="printSection" hidden>
-  <div class="pcx-noprint" style="max-width:760px;margin:14px auto 0;display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+  <div class="pcx-noprint" style="max-width:860px;margin:14px auto 0;display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
     <b>Print preview</b>
     <span style="display:flex;gap:8px;"><button class="btn" onclick="window.print()">Print</button><button class="btn" id="closePrint">Close preview</button></span>
   </div>
   <div class="pcx-sheet" id="sheet"></div>
 </div>
 
+<script src="assets/core.js"></script>
 <script>
-var AS_AT = new Date('2026-10-07');
-// Sample outstanding lines. rec = qty received so far (line level, partial supported).
-var LINES = [
-  {s:'Castle Hill Toyota', site:'Parramatta', part:'Door Skin RH',kind:'New', no:'90481', po:'PO-70512', job:'39037', veh:'Toyota Camry', ord:'2026-09-24', req:'2026-10-01', eta:'2026-10-03', q:1, rec:0},
-  {s:'Castle Hill Toyota', site:'Parramatta', part:'Boot Lid',kind:'New', no:'5211912948', po:'PO-70533', job:'35713', veh:'Mazda CX-5', ord:'2026-09-29', req:'2026-10-06', eta:'2026-10-08', q:1, rec:0},
-  {s:'Castle Hill Toyota', site:'Parramatta', part:'Boot Lid Emblem',kind:'New',delayed:'2026-10-14', no:'7530112380', po:'PO-70533', job:'35713', veh:'Mazda CX-5', ord:'2026-09-29', req:'2026-10-06', eta:'2026-10-14', q:1, rec:0},
-  {s:'SD Parts', site:'Parramatta', part:'Beaver Panel',kind:'Aftermarket', no:'P1', po:'PO-70519', job:'39037', veh:'Toyota Camry', ord:'2026-09-24', req:'2026-10-01', eta:null, q:1, rec:0},
-  {s:'West End Parts', site:'Parramatta', part:'ADAS Calibration Bracket',kind:'New',delayed:'2026-10-09', no:'2995764', po:'PO-70524', job:'39037', veh:'Toyota Camry', ord:'2026-09-26', req:'2026-10-01', eta:'2026-10-09', q:10, rec:6},
-  {s:'West End Parts', site:'Parramatta', part:'Door Badge',kind:'New', no:'447', po:'PO-70561', job:'59057', veh:'Ford Ranger', ord:'2026-10-02', req:'2026-10-09', eta:null, q:1, rec:0}
-];
-var EXCLUDED = [
-  {s:'Castle Hill Toyota', part:"Front Bar Emblem 'Toyota'", no:'7530112380', job:'39037', why:'Credited', ord:'2026-09-24'},
-  {s:'SD Parts', part:'Bonnet Clip (x2)', no:'9046709172', job:'39037', why:'Cancelled', ord:'2026-09-24'}
-];
-var NLA = [
-  {s:'West End Parts', part:'Rear Spoiler', no:'8821004', job:'59057', veh:'Ford Ranger', ord:'2026-10-02'}
-];
-
-var mode = 'dealer';
-function $(id){return document.getElementById(id);}
-function d(iso){return new Date(iso+'T00:00:00');}
-function fmt(iso){return d(iso).toLocaleDateString('en-AU',{day:'numeric',month:'short'});}
-function fmtL(iso){return d(iso).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
-function days(iso){return Math.round((AS_AT - d(iso))/86400000);}
-function out(l){return l.q - l.rec;}
-function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function age(n){var t=n>=10?'bad':(n>=5?'warn':'info');return '<span class="lgc-status '+t+'">'+n+' d</span>';}
-
-function inRange(l){var f=$('dFrom').value,t=$('dTo').value;return f&&t&&l.ord>=f&&l.ord<=t;}
-function current(){
-  var sup=$('supSel').value;
-  return LINES.filter(function(l){return out(l)>0&&inRange(l)&&(!sup||l.s===sup);});
+// ---- filtering --------------------------------------------------------
+function matchChip(l,k){
+  if(k==='all') return true;
+  var n=late(l);
+  if(k==='over') return n>0;
+  if(k==='today') return n===0;
+  if(k==='d13') return n<0 && n>=-3;
+  if(k==='d47') return n<-3 && n>=-7;
+  if(k==='later') return n<-7;
+  if(k==='noeta') return !l.eta;
+  if(k==='delayed') return !!l.delayed;
+  return true;
 }
-var COLS=[['Description','26%'],['Part Number','13%'],['Supply Kind','10%'],['Ordered','8%'],['Onsite','8%'],['Outstanding','10%'],['Supplier ETA','11%'],['Days Out.','14%']];
-function colgroup(){return '<colgroup>'+COLS.map(function(c){return '<col style="width:'+c[1]+'">';}).join('')+'</colgroup>';}
-function colHead(){return '<div class="pcx-colhead"><div class="cgrid-wrap"><table class="cgrid">'+colgroup()+'<thead><tr>'+COLS.map(function(c,i){return '<th'+(i>2&&i<8?' style="text-align:right;"':'')+'>'+c[0]+'</th>';}).join('')+'</tr></thead></table></div></div>';}
-function jobLink(l,txt){return '<a class="pcx-link" href="#job-'+l.job+'" title="Open job '+l.job+'" onclick="return jobOpen(\''+l.job+'\');">'+(txt||('Job '+l.job))+'</a>';}
-function jobOpen(j){toast('Job '+j,'Prototype: opens the job in the quoting package.');return false;}
-function poOpen(po){toast('Order '+po,'Prototype: opens the order page (parts, receive, credit, ETA).');return false;}
-function line(l){
-  var i=LINES.indexOf(l), o=out(l);
-  var r='<tr class="ln"><td>'+esc(l.part)+'</td><td class="num">'+esc(l.no)+'</td><td>'+esc(l.kind)+'</td><td class="num" style="text-align:right;">'+l.q+'</td><td class="num" style="text-align:right;">'+l.rec+'</td><td class="num fig" style="font-weight:700;text-align:right;">'+o+'</td><td style="text-align:right;color:var(--muted);">'+(l.eta?fmt(l.eta):'<span class="lgc-status warn">No ETA</span>')+'</td><td style="text-align:right;">'+age(days(l.ord))+'</td>'+'</tr>';
-  if(l.delayed) r+='<tr class="pcx-delay"><td colspan="8">Expected delivery has been delayed until '+fmtL(l.delayed)+'</td></tr>';
-  return r;
+function visible(ignoreChip){
+  var f=$('dFrom').value, t=$('dTo').value, sup=$('supSel').value, site=$('siteSel').value, typ=$('typeSel').value, chs=$('chSel').value, q=$('qSel').value.trim().toLowerCase();
+  if(!f||!t) return [];
+  return LINES.filter(function(l){
+    if(out(l)<=0 || l.ord<f || l.ord>t) return false;
+    if(sup && l.s!==sup) return false;
+    if(site && l.site!==site) return false;
+    if(typ && l.kind!==typ) return false;
+    if(chs==='never' && l.ch) return false;
+    if(chs==='3d' && l.ch && days(l.ch.on)<3) return false;
+    if(chs==='today' && !(l.ch && days(l.ch.on)===0)) return false;
+    if(q && (l.part+' '+l.no+' '+l.po+' '+l.job+' '+l.veh+' '+l.s+' '+JOBS[l.job].rego+' '+JOBS[l.job].claim).toLowerCase().indexOf(q)<0) return false;
+    return ignoreChip || matchChip(l,chip);
+  });
 }
-function poBlock(pl){
-  return '<div class="pcx-po" data-po="'+esc(pl[0].po)+'"><div class="pcx-pohd"><span><a class="pcx-link" href="#order-'+esc(pl[0].po)+'" title="Open order" onclick="return poOpen(\''+esc(pl[0].po)+'\');">Purchase Order '+esc(pl[0].po)+'</a></span><span class="pcx-pohd-r">'+esc(pl[0].s)+'</span></div><div class="cgrid-wrap"><table class="cgrid">'+colgroup()+'<tbody>'+pl.map(line).join('')+'</tbody></table></div></div>';
+// ---- table ------------------------------------------------------------
+var CD = {
+  part:  {h:'Part', w:19, s:'part', f:function(l){return '<b>'+esc(l.part)+'</b><div class="pcx-sm">'+esc(l.no)+' &middot; '+esc(l.kind)+'</div>';}},
+  sup:   {h:'Supplier', w:14, s:'sup', f:function(l){return '<b>'+esc(l.s)+'</b><div class="pcx-sm">'+SUP[l.s].ph+'</div>';}},
+  status:{h:'Status', w:11, s:'status', f:pill},
+  eta:   {h:'Supplier ETA', w:11, s:'eta', f:etaText},
+  qty:   {h:'Outstanding', w:8, r:1, f:function(l){var o=out(l);return o===l.q?String(o):('<b>'+o+'</b> of '+l.q);}},
+  job:   {h:'Job', w:12, f:function(l){return jobLink(l)+'<div class="pcx-sm">'+esc(l.veh)+' &middot; '+JOBS[l.job].rego+'</div>';}},
+  po:    {h:'PO', w:8, f:function(l){return '<span class="pcx-po"><a href="#order-'+esc(l.po)+'" title="Open order" onclick="return poOpen(\''+esc(l.po)+'\');">'+esc(l.po)+'</a></span>';}},
+  ch:    {h:'Last chased', w:12, s:'ch', f:chasedText},
+  act:   {h:'', w:7, r:1, f:function(l){return '<button class="btn pcx-btnchase" data-chase="'+LINES.indexOf(l)+'">Chase</button>';}}
+};
+function colsFor(){
+  var c=['part','sup','status','eta','qty','job','po','ch','act'];
+  if(mode==='supplier') c.splice(c.indexOf('sup'),1);
+  if(mode==='job') c.splice(c.indexOf('job'),1);
+  return c;
 }
-function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i;});}
 
+function tableHTML(ls){
+  var cols=colsFor(), tot=cols.reduce(function(a,k){return a+CD[k].w;},0);
+  var h='<div class="cgrid-wrap"><table class="cgrid"><colgroup>'+cols.map(function(k){return '<col style="width:'+(CD[k].w/tot*100).toFixed(1)+'%">';}).join('')+'</colgroup><thead><tr>';
+  cols.forEach(function(k){
+    var c=CD[k], on=c.s&&c.s===sortK;
+    h+='<th'+(c.s?' class="s" data-sort="'+c.s+'" aria-sort="'+(on?(sortDir<0?'descending':'ascending'):'none')+'"':'')+(c.r?' style="text-align:right;"':'')+'>'+c.h+(on?'<span class="ar">'+(sortDir<0?'&#9660;':'&#9650;')+'</span>':'')+'</th>';
+  });
+  h+='</tr></thead><tbody>';
+  var rows=sorted(ls);
+  function lineRow(l){return '<tr class="ln">'+cols.map(function(k){return '<td'+(CD[k].r?' class="pcx-r"':'')+'>'+CD[k].f(l)+'</td>';}).join('')+'</tr>';}
+  if(mode==='none'){ h+=rows.map(lineRow).join(''); }
+  else {
+    var key = mode==='supplier'?'s':'job';
+    uniq(rows.map(function(l){return l[key];})).forEach(function(g){
+      var gl=rows.filter(function(l){return l[key]===g;}), first=gl[0], right;
+      if(mode==='supplier'){
+        right='<span class="ph">Ph <a href="tel:'+SUP[g].ph.replace(/ /g,'')+'">'+SUP[g].ph+'</a></span><span class="sp"></span><button class="btn btn-primary pcx-btnchase" data-chaseall="'+esc(g)+'">Chase all ('+gl.length+')</button>';
+      } else {
+        right='<span class="pcx-note">'+esc(first.veh)+' &middot; requested '+fmt(first.req)+'</span><span class="sp"></span>';
+      }
+      h+='<tr class="gh"><td colspan="'+cols.length+'"><div class="pcx-gh"><h3>'+(mode==='supplier'?esc(g):jobLink(first))+'</h3><span class="lgc-status info">'+plural(gl.length,'line')+'</span>'+right+'</div></td></tr>';
+      h+=gl.map(lineRow).join('');
+    });
+  }
+  return h+'</tbody></table></div>';
+}
 
 function render(){
   var from=$('dFrom'), to=$('dTo'), ok=!!(from.value&&to.value);
   $('fTo').classList.toggle('bad',!ok);
-  var ls = ok?current():[];
+  var base=visible(true), ls=visible(false);
   $('tabCount').textContent = ls.length;
+
+  // status chips with counts (counts respect every other filter)
+  var CH=[['all','All'],['over','Overdue'],['today','Due today'],['d13','Due in 1–3 days'],['d47','Due in 4–7 days'],['later','Due later'],['noeta','No ETA'],['delayed','Delayed']];
+  var anyFilter = chip!=='all' || $('supSel').value || $('siteSel').value || $('typeSel').value || $('chSel').value || $('qSel').value.trim();
+  $('chips').innerHTML = CH.map(function(c){
+    var n=base.filter(function(l){return matchChip(l,c[0]);}).length;
+    return '<button class="pcx-chip'+(chip===c[0]?' on':'')+'" data-chip="'+c[0]+'">'+c[1]+'<span class="n">'+n+'</span></button>';
+  }).join('')+'<span class="sp"></span><span class="pcx-count">Showing '+ls.length+' of '+base.length+(anyFilter?' &middot; ':'')+'</span>'+(anyFilter?'<button class="pcx-clear" id="clr">Clear filters</button>':'');
+
   var h='';
-  if(!ok){ h='<div class="pcx-empty">Choose an order date range to see what is outstanding.</div>'; }
-  else if(!ls.length){ h='<div class="pcx-empty">Nothing outstanding in this range.</div>'; }
-  else if(mode==='dealer'){
-    h+=colHead();
-    uniq(ls.map(function(l){return l.s;})).forEach(function(s){
-      var sl=ls.filter(function(l){return l.s===s;});
-      var jobs=uniq(sl.map(function(l){return l.job;}));
-      h+='<div class="pcx-dealer"><div class="pcx-dealer-h"><h3>'+esc(s)+'</h3><span class="lgc-status info">'+sl.length+' line'+(sl.length>1?'s':'')+' · '+jobs.length+' job'+(jobs.length>1?'s':'')+'</span></div>';
-      jobs.forEach(function(j){
-        var jl=sl.filter(function(l){return l.job===j;});
-        h+='<div class="pcx-jobhd">'+jobLink(jl[0])+' <span class="pcx-note">'+esc(jl[0].veh)+' · requested '+fmt(jl[0].req)+'</span></div>';
-        uniq(jl.map(function(l){return l.po;})).forEach(function(po){h+=poBlock(jl.filter(function(l){return l.po===po;}));});
-      });
-      var ex=EXCLUDED.filter(function(e){return e.s===s;});
-      if(ex.length){
-        h+='<div class="accordion" style="margin-top:8px;"><details><summary>Excluded from this dealer <span class="ct">'+ex.length+'</span></summary><div class="acc-b"><table class="cgrid" style="min-width:0;"><tbody>'+ex.map(function(e){return '<tr class="ex"><td>'+esc(e.part)+'</td><td class="num">'+esc(e.no)+'</td><td>'+jobLink(e)+'</td><td><span class="lgc-status info">'+e.why+'</span></td></tr>';}).join('')+'</tbody></table></div></details></div>';
-      }
-      h+='</div>';
-    });
-  } else {
-    h+=colHead();
-    uniq(ls.map(function(l){return l.req;})).sort().forEach(function(rd){
-      h+='<div class="pcx-datehd">Requested delivery date '+fmtL(rd)+'</div>';
-      var dl=ls.filter(function(l){return l.req===rd;});
-      uniq(dl.map(function(l){return l.job;})).forEach(function(j){
-        var jl=dl.filter(function(l){return l.job===j;});
-        h+='<div class="pcx-jobhd">'+jobLink(jl[0])+' <span class="pcx-note">'+esc(jl[0].veh)+'</span></div>';
-        uniq(jl.map(function(l){return l.po;})).forEach(function(po){h+=poBlock(jl.filter(function(l){return l.po===po;}));});
-      });
-    });
-  }
+  if(!ok) h='<div class="pcx-empty">Choose an order date range to see what is outstanding.</div>';
+  else if(!ls.length) h='<div class="pcx-empty">Nothing outstanding matches these filters.</div>';
+  else h=tableHTML(ls);
   $('results').innerHTML=h;
-  var nl=NLA.filter(function(n){return ok&&n.ord>=from.value&&n.ord<=to.value;});
+
+  var sup=$('supSel').value;
+  var nl=NLA.filter(function(n){return ok&&n.ord>=from.value&&n.ord<=to.value&&(!sup||n.s===sup);});
   $('nlaCt').textContent=nl.length;
-  $('nlaBody').innerHTML = nl.length ? '<table class="cgrid" style="min-width:0;"><tbody>'+nl.map(function(n){return '<tr><td>'+esc(n.part)+'</td><td class="num">'+esc(n.no)+'</td><td>'+esc(n.s)+'</td><td>'+jobLink(n)+' <span class="pcx-note">'+esc(n.veh)+'</span></td><td><button class="btn" style="padding:3px 9px;">Re-order</button></td></tr>';}).join('')+'</tbody></table>' : '<div class="pcx-note" style="padding:8px;">None in this range.</div>';
+  $('nlaBody').innerHTML = nl.length ? '<table class="cgrid" style="min-width:0;"><tbody>'+nl.map(function(n){return '<tr><td>'+esc(n.part)+'</td><td>'+esc(n.no)+'</td><td>'+esc(n.s)+'</td><td>'+jobLink(n)+' <span class="pcx-note">'+esc(n.veh)+'</span></td><td><button class="btn" style="padding:3px 9px;">Re-order</button></td></tr>';}).join('')+'</tbody></table>' : '<div class="pcx-note" style="padding:8px;">None in this range.</div>';
+  var ex=EXCLUDED.filter(function(e){return ok&&e.ord>=from.value&&e.ord<=to.value&&(!sup||e.s===sup);});
+  $('exCt').textContent=ex.length;
+  $('exBody').innerHTML = ex.length ? '<table class="cgrid" style="min-width:0;"><tbody>'+ex.map(function(e){return '<tr><td>'+esc(e.part)+'</td><td>'+esc(e.no)+'</td><td>'+esc(e.s)+'</td><td>'+jobLink(e)+'</td><td><span class="lgc-status info">'+e.why+'</span></td></tr>';}).join('')+'</tbody></table>' : '<div class="pcx-note" style="padding:8px;">None in this range.</div>';
 }
 
-// supplier dropdown
-uniq(LINES.map(function(l){return l.s;})).forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s;$('supSel').appendChild(o);});
-['dFrom','dTo','supSel'].forEach(function(id){$(id).addEventListener('change',render);});
+// ---- wiring -----------------------------------------------------------
+uniq(LINES.map(function(l){return l.s;})).sort().forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s;$('supSel').appendChild(o);});
+uniq(LINES.map(function(l){return l.site;})).sort().forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s;$('siteSel').appendChild(o);});
+['dFrom','dTo','supSel','siteSel','typeSel','chSel'].forEach(function(id){$(id).addEventListener('change',render);});
+$('qSel').addEventListener('input',render);
 document.querySelectorAll('#grp button').forEach(function(b){b.onclick=function(){mode=b.dataset.g;document.querySelectorAll('#grp button').forEach(function(x){x.classList.toggle('on',x===b);});render();};});
+$('chips').addEventListener('click',function(e){
+  var c=e.target.closest('[data-chip]'); if(c){chip=c.dataset.chip;render();return;}
+  if(e.target.id==='clr'){chip='all';['supSel','siteSel','typeSel','chSel','qSel'].forEach(function(id){$(id).value='';});render();}
+});
+$('results').addEventListener('click',function(e){
+  var th=e.target.closest('th[data-sort]');
+  if(th){var k=th.dataset.sort; if(sortK===k) sortDir=-sortDir; else {sortK=k; sortDir=(k==='status'?-1:1);} render(); return;}
+  var b=e.target.closest('[data-chase]'); if(b){var l=LINES[+b.dataset.chase]; openChase(l.s,l); return;}
+  var a=e.target.closest('[data-chaseall]'); if(a){openChase(a.dataset.chaseall,null);}
+});
 
-function toast(t,m){var e=document.createElement('div');e.className='toast ok';e.innerHTML='<div><div class="tt">'+esc(t)+'</div><div class="tm">'+esc(m)+'</div></div><button class="toast-x" aria-label="Dismiss">&#10005;</button>';e.querySelector('.toast-x').onclick=function(){e.remove();};$('toasts').appendChild(e);setTimeout(function(){e.remove();},4500);}
 
-// CSV
+// ---- CSV --------------------------------------------------------------
 $('btnCsv').onclick=function(){
-  var ls=current(); if(!ls.length){toast('Nothing to export','Pick a date range with outstanding lines.');return;}
-  var rows=[['Dealer','Part','Part Nr','Supply Kind','PO','Qty Ordered','Qty Received','Qty Outstanding','Order Date','Requested Delivery','Supplier ETA','Days Outstanding','Job','Vehicle']];
-  ls.forEach(function(l){rows.push([l.s,l.part,l.no,l.kind,l.po,l.q,l.rec,out(l),l.ord,l.req,(l.eta||'No ETA'),days(l.ord),l.job,l.veh]);});
+  var ls=sorted(visible(false)); if(!ls.length){toast('Nothing to export','Nothing matches the current filters.');return;}
+  var rows=[['Supplier','Supplier Phone','Site','Part','Part Nr','Supply Kind','Job','Vehicle','PO','Qty Ordered','Qty Received','Qty Outstanding','Order Date','Requested Delivery','Status','Days Overdue','Days Since Ordered','Supplier ETA','Last Chased','Latest Note']];
+  ls.forEach(function(l){rows.push([l.s,SUP[l.s].ph,l.site,l.part,l.no,l.kind,l.job,l.veh,l.po,l.q,l.rec,out(l),l.ord,l.req,status(l).t,Math.max(0,late(l)),days(l.ord),etaPlain(l),chasedPlain(l),(latestNote(l)||{text:''}).text]);});
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='parts-chase-list.csv';a.click();
 };
 
-// Print preview: mirrors the iBody "Chase List Report" (date > job > purchase order > lines)
-function printHTML(ls){
-  var now=new Date(AS_AT), stamp=now.toLocaleDateString('en-AU',{day:'numeric',month:'numeric',year:'numeric'})+' 9:30 am';
-  var cols=['Description','Part Number','Supply Kind','Ordered','Onsite','Outstanding'], w=['34%','18%','13%','11%','11%','13%'];
-  var cg='<colgroup>'+w.map(function(x){return '<col style="width:'+x+'">';}).join('')+'</colgroup>';
-  var h='<div class="rh">PartsCheck Pty Ltd</div><div class="rt">Chase List Report</div><div class="rm"><span>'+stamp+'</span><span>1 - 1</span></div>'
-   +'<table>'+cg+'<thead class="ch"><tr>'+cols.map(function(c,i){return '<th'+(i>2?' class="n"':'')+'>'+c+'</th>';}).join('')+'</tr></thead></table>';
-  uniq(ls.map(function(l){return l.req;})).sort().forEach(function(rd){
-    h+='<div class="pdt">Requested Delivery Date '+fmtL(rd)+'</div>';
-    var dl=ls.filter(function(l){return l.req===rd;});
-    uniq(dl.map(function(l){return l.job;})).forEach(function(j){
-      var jl=dl.filter(function(l){return l.job===j;});
-      h+='<div class="pjb"><a href="#job-'+j+'">Job '+j+'</a> <span style="font-weight:400;font-size:11px;color:#444;">'+esc(jl[0].veh)+'</span></div>';
-      uniq(jl.map(function(l){return l.po;})).forEach(function(po){
-        var pl=jl.filter(function(l){return l.po===po;});
-        h+='<div class="ppo"><span>Purchase Order '+esc(po)+'</span><span>'+esc(pl[0].s)+'</span></div><table>'+cg+'<tbody>';
-        pl.forEach(function(l,i){
-          h+='<tr'+(i%2?' class="z"':'')+'><td>'+esc(l.part)+'</td><td>'+esc(l.no)+'</td><td>'+esc(l.kind)+'</td><td class="n">'+l.q+'</td><td class="n">'+l.rec+'</td><td class="n">'+out(l)+'</td></tr>';
-          if(l.delayed) h+='<tr class="dl"><td colspan="6">Expected delivery has been delayed until '+fmtL(l.delayed)+'</td></tr>';
-        });
-        h+='</tbody></table>';
-      });
-    });
-  });
-  h+='<div class="pft"><span>Ordered '+fmt($('dFrom').value)+' to '+fmt($('dTo').value)+'</span><span>Outstanding lines only; credited, cancelled and NLA lines excluded</span></div>';
-  return h;
-}
-$('btnPrint').onclick=function(){
-  var ls=current(); if(!ls.length){toast('Nothing to print','Pick a date range with outstanding lines.');return;}
-  $('sheet').innerHTML=printHTML(ls);$('app').hidden=true;$('printSection').hidden=false;
-};
-$('closePrint').onclick=function(){$('printSection').hidden=true;$('app').hidden=false;};
 
+$('btnPrint').onclick=function(){openPrint(visible(false));};
+window.pcxSet=function(sup){return visible(false).filter(function(l){return l.s===sup;});};
+window.pcxRender=render;
 render();
 </script>
 </body>
